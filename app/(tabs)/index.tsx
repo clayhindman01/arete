@@ -5,18 +5,24 @@ import { HelloWave } from "@/components/hello-wave";
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { supabase } from "@/lib/supabase";
 import { Link } from "expo-router";
 
 export default function HomeScreen() {
-  type User = {
-    name: string;
-    id: string;
+  const initalLoad = async () => {
+    const { data } = await supabase.auth.getSession();
+    console.log(data);
+
+    // const { data, error } = await supabase.auth.signUp({
+    //   email: "test@test.com",
+    //   password: "password123",
+    // });
+
+    // console.log(data);
+    // console.log(error);
   };
 
-  const user: User = {
-    name: "Clay",
-    id: "testId",
-  };
+  initalLoad();
 
   return (
     <ParallaxScrollView
@@ -29,7 +35,7 @@ export default function HomeScreen() {
       }
     >
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome {user.name}!</ThemedText>
+        <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
