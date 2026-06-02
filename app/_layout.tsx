@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -8,6 +8,7 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
+import { useEffect } from "react";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -17,27 +18,29 @@ export default function RootLayout() {
   const { session, loading, profile } = useSession();
   const colorScheme = useColorScheme();
 
-  if (loading) return null;
+  console.log(profile, loading, session);
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (!session) {
+      router.replace("/(auth)/Login");
+      return;
+    }
+
+    if (session && profile && !profile.onboarding_complete) {
+      router.replace("/(onboarding)/Onboarding");
+      return;
+    }
+
+    if (session && profile?.onboarding_complete) {
+      router.replace("/(tabs)");
+    }
+  }, [session, profile, loading]);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      {!session && (
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" />
-        </Stack>
-      )}
-
-      {!profile?.onboarding_complete && (
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(onboarding)" />
-        </Stack>
-      )}
-
-      {profile?.onboarding_complete && (
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-        </Stack>
-      )}
+      <Stack screenOptions={{ headerShown: false }} />
     </ThemeProvider>
   );
 }
