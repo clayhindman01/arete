@@ -38,11 +38,10 @@ export default function Button({
 
 const styles = StyleSheet.create({
   primaryButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "rgb(103, 189, 122)",
     padding: 14,
     borderRadius: 10,
     alignItems: "center",
-    marginTop: 6,
   },
   primaryButtonText: {
     color: "#fff",
@@ -54,7 +53,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     alignItems: "center",
-    marginBottom: 10,
   },
   secondaryButtonText: {
     color: "#e2e8f0",

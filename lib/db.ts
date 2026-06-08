@@ -1,13 +1,12 @@
 import { supabase } from "./supabase";
 
-export async function getProfile(userId: string) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", userId)
-    .single();
+export async function getProfile() {
+  const { data, error } = await supabase.from("profiles").select("*").single();
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
+
   return data;
 }
 

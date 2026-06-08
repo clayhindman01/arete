@@ -46,10 +46,15 @@ export function useSession() {
   const [loading, setLoading] = useState(true);
 
   async function loadProfile(userId: string) {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", userId)
+      .eq("id", user)
       .single();
 
     if (!error) {

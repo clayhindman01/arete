@@ -4,8 +4,6 @@ import React from "react";
 import { HapticTab } from "@/components/haptic-tab";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 export default function TabLayout() {
@@ -17,18 +15,26 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarShowLabel: false,
+        tabBarStyle: { display: "none" },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Home",
+          href: null,
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="dashboard" color={color} size={28} />
           ),
         }}
       />
       <Tabs.Screen
+        name="Settings"
+        options={{
+          href: null,
+        }}
+      />
+      {/*<Tabs.Screen
         name="Workout"
         options={{
           title: "Explore",
@@ -70,7 +76,7 @@ export default function TabLayout() {
             />
           ),
         }}
-      />
+      /> */}
     </Tabs>
   );
 }

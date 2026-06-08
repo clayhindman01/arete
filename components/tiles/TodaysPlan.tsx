@@ -1,0 +1,103 @@
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useTheme } from "@react-navigation/native";
+import { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Card from "../ui/Card";
+
+export default function TodaysPlan() {
+  const { colors } = useTheme();
+
+  return (
+    <Card>
+      <View style={styles.headerContainer}>
+        <MaterialCommunityIcons name="calendar" color="white" size={22} />
+        <Text style={[styles.titleText, { color: colors.text }]}>
+          Today's Plan
+        </Text>
+      </View>
+      <CheckListItem title="Walk 15 minutes" />
+      <CheckListItem title="Read 5 pages" />
+      <CheckListItem title="Journal 3 minutes" isLastElement={true} />
+    </Card>
+  );
+}
+
+const CheckListItem = ({
+  title,
+  isLastElement = false,
+}: {
+  title: string;
+  isLastElement?: boolean;
+}) => {
+  const { colors } = useTheme();
+  const [isChecked, setIsChecked] = useState(false);
+  return (
+    <Pressable
+      onPress={() => setIsChecked(!isChecked)}
+      style={styles.checkListItem}
+    >
+      <View
+        style={[styles.circle, isChecked ? styles.complete : styles.incomplete]}
+      >
+        {isChecked && (
+          <MaterialCommunityIcons name="check" color={colors.text} size={10} />
+        )}
+      </View>
+      {/* bottom line */}
+      {!isLastElement && <View style={styles.bottomLine} />}
+      <Text
+        style={{
+          fontSize: 16,
+          color: isChecked ? "gray" : colors.text,
+          paddingLeft: 20,
+        }}
+      >
+        {title}
+      </Text>
+    </Pressable>
+  );
+};
+
+const styles = StyleSheet.create({
+  headerContainer: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingBottom: 10,
+  },
+  titleText: {
+    paddingLeft: 5,
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  checkListItem: {
+    padding: 5,
+    display: "flex",
+    flexDirection: "row",
+  },
+  circle: {
+    borderRadius: 100,
+    height: 20,
+    width: 20,
+    borderWidth: 1,
+    borderColor: "lightgray",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  incomplete: {
+    borderWidth: 1,
+    borderColor: "lightgray",
+  },
+  complete: {
+    backgroundColor: "rgb(103, 189, 122)",
+  },
+  bottomLine: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "lightgray",
+    position: "relative",
+    right: 10,
+    top: 20,
+    height: 10,
+  },
+});

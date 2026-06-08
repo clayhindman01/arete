@@ -18,8 +18,6 @@ export default function RootLayout() {
   const { session, loading, profile } = useSession();
   const colorScheme = useColorScheme();
 
-  console.log(profile, loading, session);
-
   useEffect(() => {
     if (loading) return;
 

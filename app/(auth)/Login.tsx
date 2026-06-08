@@ -32,7 +32,9 @@ export default function LoginScreen() {
         <View style={styles.inner}>
           <View style={styles.card}>
             <Text style={styles.title}>Arete</Text>
-            <Text style={styles.subtitle}>Discipline Engineered</Text>
+            <Text style={styles.subtitle}>
+              Small Commitments. Sustained Growth.
+            </Text>
 
             <Text style={styles.label}>Email</Text>
             <TextInput
@@ -63,7 +65,7 @@ export default function LoginScreen() {
               <View style={styles.line} />
             </View>
 
-            <Button label="Continue with Google" type="secondary" />
+            {/* <Button label="Continue with Google" type="secondary" /> */}
             <Button
               label="Create New Account"
               type="secondary"
