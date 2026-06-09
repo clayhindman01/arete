@@ -60,7 +60,7 @@ export default function StreaksTile() {
                 fontWeight: "bold",
               }}
             >
-              57
+              0
             </Text>
           </View>
         </View>

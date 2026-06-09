@@ -9,13 +9,7 @@ export default function Card({
   style?: object;
 }) {
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: "rgba(26, 26, 26, 0.75)" },
-        style,
-      ]}
-    >
+    <View style={[styles.container, { backgroundColor: "#0f172a" }, style]}>
       {children}
     </View>
   );

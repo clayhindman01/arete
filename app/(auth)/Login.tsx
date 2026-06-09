@@ -36,23 +36,21 @@ export default function LoginScreen() {
               Small Commitments. Sustained Growth.
             </Text>
 
-            <Text style={styles.label}>Email</Text>
             <TextInput
               style={styles.input}
               value={email}
               onChangeText={setEmail}
-              placeholder="you@example.com"
+              placeholder="Email"
               placeholderTextColor="#64748b"
               keyboardType="email-address"
               autoCapitalize="none"
             />
 
-            <Text style={styles.label}>Password</Text>
             <TextInput
               style={styles.input}
               value={password}
               onChangeText={setPassword}
-              placeholder="••••••••"
+              placeholder="Password"
               placeholderTextColor="#64748b"
               secureTextEntry
             />
@@ -93,11 +91,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    backgroundColor: "#0f172a",
     borderRadius: 16,
     padding: 24,
-    borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.2)",
   },
   title: {
     fontSize: 32,

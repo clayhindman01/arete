@@ -65,7 +65,6 @@ export function useSession() {
   useEffect(() => {
     // Get current session
     supabase.auth.getSession().then(async ({ data }) => {
-      console.log("useSession useEffect", data);
       const currentSession = data.session;
       setSession(currentSession);
 

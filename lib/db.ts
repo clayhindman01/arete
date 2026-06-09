@@ -27,6 +27,23 @@ export async function createCheckIn(checkIn: {
   return data;
 }
 
+export const completeOnboarding = async () => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("User not authenticated");
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ onboarding_complete: true })
+    .eq("id", user.id);
+
+  if (error) {
+    console.error("Failed to complete onboarding:", error);
+  }
+};
+
 export async function getWorkouts(userId: string) {
   const { data, error } = await supabase
     .from("workouts")

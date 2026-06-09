@@ -3,32 +3,19 @@ import StreaksTile from "@/components/tiles/StreaksTile";
 import TodaysPlan from "@/components/tiles/TodaysPlan";
 import Header from "@/components/ui/Header";
 import { getCurrentUser } from "@/lib/auth";
-import { getProfile } from "@/lib/db";
-import { useTheme } from "@react-navigation/native";
-import { Redirect, useRouter } from "expo-router";
-import { useState } from "react";
+import { Redirect } from "expo-router";
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useProfile } from "../(auth)/ProfileContext";
 
 export default function Dashboard() {
-  const { colors } = useTheme();
-  const router = useRouter();
+  const { profile } = useProfile();
 
-  const [showCoachInsight, setShowCoachInsight] = useState(true);
-  const loadProfile = async () => {
-    try {
-      const profile = await getProfile();
-      console.log("Profile", profile);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  loadProfile();
+  console.log(profile);
 
   if (getCurrentUser != null) {
     return (
-      <SafeAreaView>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#020617" }}>
         <Header />
         <View style={{ padding: 5, paddingVertical: 10 }}>
           <StreaksTile />

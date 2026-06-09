@@ -1,3 +1,4 @@
+import { signOut } from "@/lib/auth";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
@@ -6,7 +7,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Settings() {
-  const router = useRouter();
+  const { colors } = useTheme();
 
   const accountabilityOptions: Array<optionsType> = [
     {
@@ -23,8 +24,12 @@ export default function Settings() {
     { label: "Aggressive", value: "aggressive" },
   ];
 
+  const handleSignOutPress = () => {
+    signOut();
+  };
+
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#020617" }}>
       <SettingsHeader />
       <SettingsDropdown
         options={accountabilityOptions}
@@ -36,6 +41,8 @@ export default function Settings() {
         title="Motivation Style"
         defaultOption={{ label: "Direct", value: "directly" }}
       />
+      <SettingsButton label="Sign Out" onPress={handleSignOutPress} />
+      <SettingsButton severity="critical" label="Delete Account" />
     </SafeAreaView>
   );
 }
@@ -121,6 +128,51 @@ const SettingsHeader = () => {
           color={colors.text}
           size={40}
         />
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const SettingsButton = ({
+  label,
+  onPress = () => null,
+  severity = "normal",
+}: {
+  label: string;
+  onPress?: () => void;
+  severity?: "normal" | "critical";
+}) => {
+  const { colors } = useTheme();
+  return (
+    <View
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        paddingVertical: 10,
+      }}
+    >
+      <TouchableOpacity
+        onPress={() => onPress()}
+        style={{
+          backgroundColor: severity === "critical" ? "rgb(195, 86, 86)" : "",
+          width: "65%",
+          padding: 15,
+          borderWidth: 1,
+          borderColor: "rgb(51,51,51)",
+          borderRadius: 5,
+        }}
+      >
+        <Text
+          style={{
+            color: colors.text,
+            fontSize: 16,
+            textAlign: "center",
+            fontWeight: "bold",
+          }}
+        >
+          {label}
+        </Text>
       </TouchableOpacity>
     </View>
   );
