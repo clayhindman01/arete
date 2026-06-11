@@ -22,15 +22,19 @@ export default function TodaysPlan() {
   );
 }
 
-const CheckListItem = ({
+export const CheckListItem = ({
   title,
   isLastElement = false,
+  defaultChecked = false,
+  grayOnCheck = true,
 }: {
   title: string;
   isLastElement?: boolean;
+  defaultChecked?: boolean;
+  grayOnCheck?: boolean;
 }) => {
   const { colors } = useTheme();
-  const [isChecked, setIsChecked] = useState(false);
+  const [isChecked, setIsChecked] = useState(defaultChecked);
   return (
     <Pressable
       onPress={() => setIsChecked(!isChecked)}
@@ -48,7 +52,13 @@ const CheckListItem = ({
       <Text
         style={{
           fontSize: 16,
-          color: isChecked ? "gray" : colors.text,
+          color: isChecked
+            ? grayOnCheck
+              ? "gray"
+              : colors.text
+            : !grayOnCheck
+              ? colors.text
+              : "gray",
           paddingLeft: 20,
         }}
       >

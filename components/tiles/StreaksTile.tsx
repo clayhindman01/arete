@@ -6,6 +6,15 @@ import Card from "../ui/Card";
 export default function StreaksTile() {
   const { colors } = useTheme();
 
+  const days = ["S", "M", "T", "W", "T", "F", "S"];
+
+  const nextWeekLetters = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() + i);
+    return days[date.getDay()];
+  });
+
+  console.log(nextWeekLetters);
   return (
     <Card>
       <View style={{ display: "flex", flexDirection: "row" }}>
@@ -23,13 +32,9 @@ export default function StreaksTile() {
                 paddingRight: 5,
               }}
             >
-              <DayText day="M" />
-              <DayText day="T" />
-              <DayText day="W" />
-              <DayText day="T" />
-              <DayText day="F" />
-              <DayText day="S" />
-              <DayText day="S" />
+              {nextWeekLetters.map((day, index) => (
+                <DayText day={day} key={index} />
+              ))}
             </View>
           </View>
           <StreakItem title="Walk" />
@@ -98,12 +103,12 @@ const StreakItem = ({ title }: { title: string }) => {
         </Text>
       </View>
       <View style={styles.streakIconContainer}>
-        <HabitBox completed={true} />
-        <HabitBox completed={true} />
-        <HabitBox completed={true} />
         <HabitBox />
-        <HabitBox completed={true} />
-        <HabitBox completed={true} />
+        <HabitBox />
+        <HabitBox />
+        <HabitBox />
+        <HabitBox />
+        <HabitBox />
         <HabitBox />
       </View>
     </View>

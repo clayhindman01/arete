@@ -7,7 +7,7 @@ type PulseTextProps = {
 };
 
 const phases = [
-  "Welcome to Arete",
+  "Arete = Excellence through Action",
   "Become who you want to be through consistent action.",
 ];
 
@@ -23,7 +23,7 @@ export default function PulseText({ onAnimationComplete }: PulseTextProps) {
       Animated.sequence([
         Animated.timing(opacity, {
           toValue: 1,
-          duration: 800,
+          duration: 2000,
           useNativeDriver: true,
         }),
         Animated.delay(1400),

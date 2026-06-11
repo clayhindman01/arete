@@ -13,9 +13,9 @@ export default function Header() {
         <Text style={[styles.text, { color: colors.text }]}>
           Good morning, Clay
         </Text>
-        <Text style={[styles.subText, { color: colors.text }]}>
+        {/* <Text style={[styles.subText, { color: colors.text }]}>
           Current Goal: Read 10 Books this year
-        </Text>
+        </Text> */}
         {/* <Text style={[styles.subText, { color: colors.text }]}>
           Consistency Score: 84%
         </Text> */}

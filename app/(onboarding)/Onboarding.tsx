@@ -1,9 +1,10 @@
 import { useProfile } from "@/app/(auth)/ProfileContext";
 import Button from "@/components/ui/Button";
 import ButtonGroup from "@/components/ui/ButtonGroup";
+import PlanComponent from "@/components/ui/PlanComponent";
 import PulseText from "@/components/ui/PulseText";
 import TextField from "@/components/ui/TextField";
-import { completeOnboarding } from "@/lib/db";
+import { generatePlan } from "@/lib/ai";
 import type {
   AvailableTime,
   GoalTimeline,
@@ -13,9 +14,11 @@ import {
   AVAILABLE_TIME_OPTIONS,
   GOAL_TIMELINE_OPTIONS,
 } from "@/types/onboarding";
+import { PlanGeneration } from "@/types/PlanGeneration";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -28,7 +31,8 @@ export default function Onboarding() {
   const router = useRouter();
   const { profile, refreshProfile } = useProfile();
   const [showIntro, setShowIntro] = useState(true);
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
+  const [planData, setPlanData] = useState<PlanGeneration>();
   const [formData, setFormData] = useState<OnboardingData>({
     name: "",
     goal: "",
@@ -59,6 +63,12 @@ export default function Onboarding() {
           newErrors.startingPoint = "Starting point is required";
         }
         break;
+      case 3:
+        break;
+      case 5:
+        break;
+      case 6:
+        break;
     }
 
     setErrors(newErrors);
@@ -66,9 +76,10 @@ export default function Onboarding() {
   };
 
   const handleNext = () => {
+    console.log(currentStep);
     if (validateStep(currentStep)) {
-      if (currentStep < 5) {
-        setCurrentStep((currentStep + 1) as 1 | 2 | 3 | 4 | 5);
+      if (currentStep < 6) {
+        setCurrentStep((currentStep + 1) as 1 | 2 | 3 | 4 | 5 | 6);
         setErrors({});
       } else {
         handleComplete();
@@ -76,26 +87,34 @@ export default function Onboarding() {
     }
   };
 
-  const handleSelectOption = (step: 1 | 2 | 3 | 4 | 5) => {
+  const handleSelectOption = (step: 1 | 2 | 3 | 4 | 5 | 6) => {
     if (validateStep(step)) {
       if (step < 5) {
-        setCurrentStep((step + 1) as 1 | 2 | 3 | 4 | 5);
+        setCurrentStep((step + 1) as 1 | 2 | 3 | 4 | 5 | 6);
         setErrors({});
       } else {
-        handleComplete();
+        handleGeneratePlan();
       }
     }
   };
 
-  const handleComplete = async () => {
+  const handleGeneratePlan = async () => {
+    setCurrentStep(6);
     // TODO: Save formData to database when ready
     // For now, just mark onboarding as complete
     console.log("Onboarding data:", formData);
+    generatePlan(formData).then((res) => {
+      setPlanData(JSON.parse(res.text));
+      console.log("Plan", JSON.parse(res.text));
+    });
 
     // Mark onboarding as complete and navigate
+  };
+
+  const handleComplete = () => {
     if (profile) {
       // Update profile to mark onboarding complete
-      completeOnboarding().then(async () => await refreshProfile());
+      // completeOnboarding().then(async () => await refreshProfile());
     }
     router.replace("/(tabs)");
   };
@@ -183,8 +202,6 @@ export default function Onboarding() {
                   value={formData.availableTime}
                   onChange={(value: AvailableTime) => {
                     setFormData({ ...formData, availableTime: value });
-                    // if (errors.availableTime)
-                    //   setErrors({ ...errors, availableTime: undefined });
                     handleSelectOption(5);
                   }}
                 />
@@ -193,13 +210,39 @@ export default function Onboarding() {
                 )}
               </View>
             )}
+
+            {currentStep === 6 &&
+              (planData ? (
+                <View>
+                  <Text style={styles.stepTitle}>
+                    Modify the plan to fit your life
+                  </Text>
+                  {planData?.commitments.map((commitment, index) => (
+                    <PlanComponent key={index} commitment={commitment} />
+                  ))}
+                </View>
+              ) : (
+                <>
+                  <Text style={styles.stepTitle}>Creating Plan</Text>
+                  <ActivityIndicator size="large" color="white" />
+                </>
+              ))}
+
             {(currentStep === 1 || currentStep === 2 || currentStep === 4) && (
               <View style={styles.actions}>
+                <Button label="Next" type="primary" onPress={handleNext} />
+              </View>
+            )}
+            {currentStep === 6 && planData && (
+              <View style={styles.actions}>
                 <Button
-                  label={currentStep === 4 ? "Complete" : "Next"}
+                  label={currentStep === 6 ? "Complete" : "Next"}
                   type="primary"
                   onPress={handleNext}
                 />
+                {/* {currentStep === 6 && (
+                  <Button type="secondary" label="Customize Plan" />
+                )} */}
               </View>
             )}
           </View>
@@ -229,10 +272,17 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: "800",
     textAlign: "center",
     color: "#ecedee",
     marginBottom: 24,
+  },
+  subText: {
+    fontSize: 18,
+    textAlign: "center",
+    color: "#ecedee",
+    marginBottom: 24,
+    marginTop: -18,
   },
   errorText: {
     color: "#ff6b6b",

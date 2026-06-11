@@ -1,4 +1,4 @@
-import { router, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import "react-native-reanimated";
 
 import { ProfileProvider } from "@/app/(auth)/ProfileContext";
@@ -12,19 +12,21 @@ import {
 } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 
-export const unstable_settings = {
-  anchor: "(tabs)",
-};
+// export const unstable_settings = {
+//   anchor: "(tabs)",
+// };
 
 export default function RootLayout() {
   const { session, loading } = useSession();
   const [profile, setProfile] = useState<{ onboarding_complete: boolean }>();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const loadProfile = async () => {
       try {
         const profile = await getProfile();
         setProfile(profile);
+        setIsLoading(false);
       } catch (error) {
         console.error(error);
       }
@@ -34,23 +36,23 @@ export default function RootLayout() {
 
   const colorScheme = useColorScheme();
 
-  useEffect(() => {
-    if (loading) return;
+  // useEffect(() => {
+  //   if (loading) return;
 
-    if (!session) {
-      router.replace("/(auth)/Login");
-      return;
-    }
+  //   if (!session && !isLoading) {
+  //     router.replace("/(auth)/Login");
+  //     return;
+  //   }
 
-    if (session && profile && !profile.onboarding_complete) {
-      router.replace("/(onboarding)/Onboarding");
-      return;
-    }
+  //   if (session && !isLoading && profile && !profile.onboarding_complete) {
+  //     router.replace("/(onboarding)/Onboarding");
+  //     return;
+  //   }
 
-    if (session && profile?.onboarding_complete) {
-      router.replace("/(tabs)");
-    }
-  }, [session, profile, loading]);
+  //   if (session && !isLoading && profile?.onboarding_complete) {
+  //     router.replace("/(tabs)");
+  //   }
+  // }, [session, profile, loading]);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
