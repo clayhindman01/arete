@@ -9,8 +9,6 @@ import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Dashboard() {
-  // const { profile } = useProfile();
-  // console.log(profile);
   if (getCurrentUser != null) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#020617" }}>

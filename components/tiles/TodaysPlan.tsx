@@ -10,7 +10,7 @@ export default function TodaysPlan() {
   return (
     <Card>
       <View style={styles.headerContainer}>
-        <MaterialCommunityIcons name="calendar" color="white" size={22} />
+        {/* <MaterialCommunityIcons name="calendar" color="white" size={22} /> */}
         <Text style={[styles.titleText, { color: colors.text }]}>
           Today's Plan
         </Text>
@@ -76,7 +76,6 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   titleText: {
-    paddingLeft: 5,
     fontSize: 18,
     fontWeight: "bold",
   },

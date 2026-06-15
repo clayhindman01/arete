@@ -149,14 +149,14 @@ const SettingsButton = ({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        paddingVertical: 10,
+        padding: 10,
       }}
     >
       <TouchableOpacity
         onPress={() => onPress()}
         style={{
           backgroundColor: severity === "critical" ? "rgb(195, 86, 86)" : "",
-          width: "65%",
+          width: "100%",
           padding: 15,
           borderWidth: 1,
           borderColor: "rgb(51,51,51)",

@@ -2,7 +2,7 @@ import { act, render, waitFor } from "@testing-library/react-native";
 import React from "react";
 import { Text } from "react-native";
 
-import { ProfileProvider, useProfile } from "@/app/(auth)/ProfileContext";
+import { ProfileProvider, useProfile } from "@/lib/ProfileContext";
 import { getProfile } from "@/lib/db";
 import { supabase } from "@/lib/supabase";
 

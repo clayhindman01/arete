@@ -1,10 +1,11 @@
-import { useProfile } from "@/app/(auth)/ProfileContext";
 import Button from "@/components/ui/Button";
 import ButtonGroup from "@/components/ui/ButtonGroup";
 import PlanComponent from "@/components/ui/PlanComponent";
 import PulseText from "@/components/ui/PulseText";
 import TextField from "@/components/ui/TextField";
 import { generatePlan } from "@/lib/ai";
+import { completeOnboarding, saveGeneratedPlan } from "@/lib/db";
+import { useProfile } from "@/lib/ProfileContext";
 import type {
   AvailableTime,
   GoalTimeline,
@@ -76,14 +77,9 @@ export default function Onboarding() {
   };
 
   const handleNext = () => {
-    console.log(currentStep);
     if (validateStep(currentStep)) {
-      if (currentStep < 6) {
-        setCurrentStep((currentStep + 1) as 1 | 2 | 3 | 4 | 5 | 6);
-        setErrors({});
-      } else {
-        handleComplete();
-      }
+      setCurrentStep((currentStep + 1) as 1 | 2 | 3 | 4 | 5 | 6);
+      setErrors({});
     }
   };
 
@@ -112,11 +108,16 @@ export default function Onboarding() {
   };
 
   const handleComplete = () => {
-    if (profile) {
+    if (profile && planData) {
       // Update profile to mark onboarding complete
-      // completeOnboarding().then(async () => await refreshProfile());
+      console.log("profile.id", profile.id);
+      saveGeneratedPlan(profile.id, planData).then(() => {
+        completeOnboarding().then(async () => {
+          await refreshProfile();
+          router.replace("/(tabs)");
+        });
+      });
     }
-    router.replace("/(tabs)");
   };
 
   return (
@@ -236,13 +237,10 @@ export default function Onboarding() {
             {currentStep === 6 && planData && (
               <View style={styles.actions}>
                 <Button
-                  label={currentStep === 6 ? "Complete" : "Next"}
+                  label="Complete"
                   type="primary"
-                  onPress={handleNext}
+                  onPress={handleComplete}
                 />
-                {/* {currentStep === 6 && (
-                  <Button type="secondary" label="Customize Plan" />
-                )} */}
               </View>
             )}
           </View>

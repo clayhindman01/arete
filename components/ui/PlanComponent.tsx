@@ -15,7 +15,7 @@ export default function PlanComponent({
 }) {
   const { colors } = useTheme();
 
-  const getDayOfWeekValues = (day_of_week: DaysOfWeek) => {
+  const getDayOfWeekValues = (day_of_week: DaysOfWeek[]) => {
     let days = [];
     for (const day of day_of_week) {
       switch (day) {
@@ -64,10 +64,8 @@ export default function PlanComponent({
   return (
     <View style={styles.container}>
       <Text style={styles.titleText}>{commitment.title}</Text>
-      {/* <Text style={{ color: colors.text }}>{commitment.description}</Text> */}
       {commitment.routines.map((routine, index) => (
         <View key={index}>
-          {/* <Text style={styles.titleText}>{routine.title}</Text> */}
           {routine.tasks.map((task, i) => (
             <View key={`${index}${i}`}>
               <CheckListItem

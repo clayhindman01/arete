@@ -10,7 +10,7 @@ export default function StreaksTile() {
 
   const nextWeekLetters = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
-    date.setDate(date.getDate() + i);
+    date.setDate(date.getDate() + i + 1);
     return days[date.getDay()];
   });
 
