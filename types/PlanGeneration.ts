@@ -1,4 +1,4 @@
-type Goal = {
+export type Goal = {
   description: string;
   target_date: string;
   title: string;

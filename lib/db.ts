@@ -11,6 +11,15 @@ export async function getProfile() {
   return data;
 }
 
+const getUserId = async () => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("User not authenticated");
+  return user;
+};
+
 export async function createCheckIn(checkIn: {
   user_id: string;
   energy_level: number;
@@ -29,11 +38,7 @@ export async function createCheckIn(checkIn: {
 }
 
 export const completeOnboarding = async () => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) throw new Error("User not authenticated");
+  const user = await getUserId();
 
   const { error } = await supabase
     .from("profiles")
@@ -45,17 +50,19 @@ export const completeOnboarding = async () => {
   }
 };
 
-export async function getPlans(userId: string) {
+export async function getActivePlan() {
+  const user = await getUserId();
   const { data, error } = await supabase
     .from("ai_plans")
-    .select(
-      `
-      *,
-    `,
-    )
-    .eq("user_id", userId);
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("active", true)
+    .order("version", { ascending: false })
+    .limit(1)
+    .single();
 
   if (error) throw error;
+
   return data;
 }
 

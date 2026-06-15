@@ -1,15 +1,18 @@
+import { Goal } from "@/types/PlanGeneration";
 import { useTheme } from "@react-navigation/native";
 import { StyleSheet, Text } from "react-native";
 import Card from "../ui/Card";
 
-export default function GoalsTile() {
+export default function GoalsTile({ goal }: { goal: Goal }) {
   const { colors } = useTheme();
 
   return (
     <Card>
-      <Text style={[styles.titleText, { color: colors.text }]}>Goal</Text>
+      <Text style={[styles.titleText, { color: colors.text }]}>
+        Goal - {goal?.title || "No goal set"}
+      </Text>
       <Text style={[styles.subText, { color: colors.text }]}>
-        Read 10 books this year
+        {goal?.description || "No description"}
       </Text>
     </Card>
   );

@@ -3,7 +3,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Settings() {
@@ -41,6 +41,9 @@ export default function Settings() {
         title="Motivation Style"
         defaultOption={{ label: "Direct", value: "directly" }}
       />
+
+      <SettingsButton label="Manage Subscription" />
+      <SettingsButton label="Create a New Goal" disabled={true} />
       <SettingsButton label="Sign Out" onPress={handleSignOutPress} />
       <SettingsButton severity="critical" label="Delete Account" />
     </SafeAreaView>
@@ -68,7 +71,6 @@ const SettingsDropdown = ({
       style={{
         display: "flex",
         flexDirection: "column",
-        // justifyContent: "space-between",
         alignItems: "center",
         padding: 10,
       }}
@@ -78,9 +80,10 @@ const SettingsDropdown = ({
       </Text>
 
       <View style={{ display: "flex", flexDirection: "row" }}>
-        {options.map((option) => (
+        {options.map((option, index) => (
           <SettingsDropdownOption
             label={option.label}
+            key={index}
             selectedOption={selected}
           />
         ))}
@@ -137,12 +140,22 @@ const SettingsButton = ({
   label,
   onPress = () => null,
   severity = "normal",
+  disabled = false,
 }: {
   label: string;
   onPress?: () => void;
   severity?: "normal" | "critical";
+  disabled?: boolean;
 }) => {
   const { colors } = useTheme();
+
+  const handleDisabledPress = () => {
+    Alert.alert(
+      "Consistency is key to building lasting habits",
+      "Stick to your current goal for atleast 30 days before creating a new one.",
+    );
+  };
+
   return (
     <View
       style={{
@@ -153,9 +166,12 @@ const SettingsButton = ({
       }}
     >
       <TouchableOpacity
-        onPress={() => onPress()}
+        onPress={() => (disabled ? handleDisabledPress() : onPress())}
         style={{
-          backgroundColor: severity === "critical" ? "rgb(195, 86, 86)" : "",
+          backgroundColor:
+            severity === "critical"
+              ? "rgb(195, 86, 86)"
+              : "rgba(148,163,184,0.3)",
           width: "100%",
           padding: 15,
           borderWidth: 1,
@@ -165,7 +181,7 @@ const SettingsButton = ({
       >
         <Text
           style={{
-            color: colors.text,
+            color: !disabled ? colors.text : "gray",
             fontSize: 16,
             textAlign: "center",
             fontWeight: "bold",

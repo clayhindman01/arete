@@ -9,7 +9,7 @@ export default function Card({
   style?: object;
 }) {
   return (
-    <View style={[styles.container, { backgroundColor: "#0f172a" }, style]}>
+    <View style={[styles.container, { backgroundColor: "#1e1e2d" }, style]}>
       {children}
     </View>
   );
@@ -17,11 +17,11 @@ export default function Card({
 
 const styles = StyleSheet.create({
   container: {
-    padding: 10,
+    padding: 15,
     borderRadius: 10,
     marginVertical: 5,
     justifyContent: "center",
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: "rgba(85, 84, 84, 0.5)",
   },
 });

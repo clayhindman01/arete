@@ -1,23 +1,46 @@
+import { PlanGeneration } from "@/types/PlanGeneration";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Card from "../ui/Card";
 
-export default function TodaysPlan() {
+export default function TodaysPlan({
+  plan_json,
+}: {
+  plan_json: PlanGeneration;
+}) {
   const { colors } = useTheme();
 
   return (
     <Card>
       <View style={styles.headerContainer}>
-        {/* <MaterialCommunityIcons name="calendar" color="white" size={22} /> */}
         <Text style={[styles.titleText, { color: colors.text }]}>
           Today's Plan
         </Text>
       </View>
-      <CheckListItem title="Walk 15 minutes" />
-      <CheckListItem title="Read 5 pages" />
-      <CheckListItem title="Journal 3 minutes" isLastElement={true} />
+      {plan_json &&
+        plan_json.commitments.map((commitment, index) => (
+          <View key={index}>
+            {commitment.routines.map((routine, i) => (
+              <View key={`${index}${i}`}>
+                {routine.tasks.map((task, j) => (
+                  <View key={`${index}${i}${j}`}>
+                    <CheckListItem
+                      title={`${task.title}`}
+                      grayOnCheck={false}
+                      isLastElement={
+                        index === plan_json.commitments.length - 1 &&
+                        i === commitment.routines.length - 1 &&
+                        j === routine.tasks.length - 1
+                      }
+                    />
+                  </View>
+                ))}
+              </View>
+            ))}
+          </View>
+        ))}
     </Card>
   );
 }

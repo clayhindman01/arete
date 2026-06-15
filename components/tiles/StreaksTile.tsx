@@ -1,9 +1,14 @@
+import { PlanGeneration } from "@/types/PlanGeneration";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useTheme } from "@react-navigation/native";
 import { StyleSheet, Text, View } from "react-native";
 import Card from "../ui/Card";
 
-export default function StreaksTile() {
+export default function StreaksTile({
+  plan_json,
+}: {
+  plan_json: PlanGeneration;
+}) {
   const { colors } = useTheme();
 
   const days = ["S", "M", "T", "W", "T", "F", "S"];
@@ -37,9 +42,20 @@ export default function StreaksTile() {
               ))}
             </View>
           </View>
-          <StreakItem title="Walk" />
-          <StreakItem title="Read" />
-          <StreakItem title="Journal" />
+          {plan_json &&
+            plan_json.commitments.map((commitment, index) => (
+              <View key={index}>
+                {commitment.routines.map((routine, i) => (
+                  <View key={`${index}${i}`}>
+                    {routine.tasks.map((task, j) => (
+                      <View key={`${index}${i}${j}`}>
+                        <StreakItem title={`${task.title}`} />
+                      </View>
+                    ))}
+                  </View>
+                ))}
+              </View>
+            ))}
         </View>
 
         <View style={styles.containerRight}>
@@ -99,7 +115,8 @@ const StreakItem = ({ title }: { title: string }) => {
             fontWeight: 400,
           }}
         >
-          {title}
+          {/* TODO: Edit AI template generation to include a 1 word summary of the task. Include that task here. */}
+          {title.split(" ")[0]}
         </Text>
       </View>
       <View style={styles.streakIconContainer}>
