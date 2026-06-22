@@ -7,22 +7,53 @@ export default function Header() {
   const { colors } = useTheme();
   const router = useRouter();
 
+  const today = new Date();
+
   return (
     <View style={styles.container}>
-      <View>
-        <Text style={[styles.text, { color: colors.text }]}>
-          Good morning, Clay
+      <View
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <Text
+          style={{
+            lineHeight: 36,
+            fontWeight: "bold",
+            fontSize: 28,
+            color: "#A1A1AA",
+            letterSpacing: 8,
+            textAlign: "center",
+          }}
+        >
+          ARETE
         </Text>
-        {/* <Text style={[styles.subText, { color: colors.text }]}>
-          Current Goal: Read 10 Books this year
-        </Text> */}
-        {/* <Text style={[styles.subText, { color: colors.text }]}>
-          Consistency Score: 84%
-        </Text> */}
+        <Text
+          style={{
+            color: "#A1A1AA",
+            fontSize: 16,
+            fontWeight: 500,
+            lineHeight: 20,
+            letterSpacing: 2,
+            textAlign: "center",
+            textTransform: "uppercase",
+          }}
+        >
+          {today.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+          })}
+        </Text>
       </View>
 
-      <TouchableOpacity onPress={() => router.navigate("/(tabs)/Settings")}>
-        <MaterialIcons name="settings" color={colors.text} size={22} />
+      <TouchableOpacity
+        onPress={() => router.navigate("/(tabs)/Settings")}
+        style={{ position: "absolute", right: 15, top: 15 }}
+      >
+        <MaterialIcons name="settings" color="#A1A1AA" size={22} />
       </TouchableOpacity>
     </View>
   );
@@ -32,15 +63,11 @@ const styles = StyleSheet.create({
   container: {
     display: "flex",
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
-    padding: 5,
     paddingVertical: 10,
   },
   text: {
     fontSize: 24,
-  },
-  subText: {
-    fontSize: 16,
   },
 });

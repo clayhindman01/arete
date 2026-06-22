@@ -19,25 +19,25 @@ export default function PlanComponent({
     let days = [];
     for (const day of day_of_week) {
       switch (day) {
-        case 0:
+        case "M":
           days.push("Monday");
           break;
-        case 1:
-          days.push("Tueday");
+        case "T":
+          days.push("Tuesday");
           break;
-        case 2:
+        case "W":
           days.push("Wednesday");
           break;
-        case 3:
+        case "Th":
           days.push("Thursday");
           break;
-        case 4:
+        case "F":
           days.push("Friday");
           break;
-        case 5:
+        case "S":
           days.push("Saturday");
           break;
-        case 6:
+        case "Su":
           days.push("Sunday");
           break;
       }
@@ -54,11 +54,12 @@ export default function PlanComponent({
   };
 
   const createPlanChecklistLabel = (routine: Routines, task: Tasks) => {
+    console.log("task", task);
     if (routine.frequency === "weekly") {
       const days = getDayOfWeekValues(routine.days_of_week);
       return `${task.title} ${formatDays(days)}\nEstimated Time: ${task.estimated_minutes} min`;
     } else {
-      return `${task.title} ${routine.frequency}\nEstimated Time: ${task.estimated_minutes} min`;
+      return `${task.description}\nEstimated Time: ${task.estimated_minutes} min`;
     }
   };
   return (
@@ -68,12 +69,20 @@ export default function PlanComponent({
         <View key={index}>
           {routine.tasks.map((task, i) => (
             <View key={`${index}${i}`}>
-              <CheckListItem
-                title={createPlanChecklistLabel(routine, task)}
-                defaultChecked={true}
-                isLastElement={true}
-                grayOnCheck={false}
-              />
+              <CheckListItem defaultChecked={true} grayOnCheck={false}>
+                <Text style={styles.taskTitle}>{task.title}</Text>
+                <Text style={{ color: colors.text }}>{task.description}</Text>
+                <Text style={{ color: colors.text }}>
+                  Frequency:{" "}
+                  {routine.frequency === "daily"
+                    ? "Daily"
+                    : "Weekly on " +
+                      formatDays(getDayOfWeekValues(routine.days_of_week))}
+                </Text>
+                <Text style={{ color: colors.text }}>
+                  Estimated Time: {task.estimated_minutes} min
+                </Text>
+              </CheckListItem>
             </View>
           ))}
         </View>
@@ -91,6 +100,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     // textAlign: "center",
     lineHeight: 32,
+    color: "white",
+  },
+  taskTitle: {
+    fontSize: 16,
+    fontWeight: "600",
     color: "white",
   },
   bulletPoint: {

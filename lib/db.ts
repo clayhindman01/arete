@@ -11,7 +11,7 @@ export async function getProfile() {
   return data;
 }
 
-const getUserId = async () => {
+const getUser = async () => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -38,7 +38,7 @@ export async function createCheckIn(checkIn: {
 }
 
 export const completeOnboarding = async () => {
-  const user = await getUserId();
+  const user = await getUser();
 
   const { error } = await supabase
     .from("profiles")
@@ -51,7 +51,7 @@ export const completeOnboarding = async () => {
 };
 
 export async function getActivePlan() {
-  const user = await getUserId();
+  const user = await getUser();
   const { data, error } = await supabase
     .from("ai_plans")
     .select("*")
@@ -133,6 +133,7 @@ export async function saveGeneratedPlan(userId: string, plan: PlanGeneration) {
           plan_id: planId,
           title: routine.title,
           frequency: routine.frequency,
+          days_of_week: routine.days_of_week,
           active: true,
         })
         .select()
@@ -146,11 +147,12 @@ export async function saveGeneratedPlan(userId: string, plan: PlanGeneration) {
         description: task.description,
         estimated_minutes: task.estimated_minutes,
         order_index: index,
+        one_word_description: task.one_word_description,
       }));
 
       if (steps.length > 0) {
         const { error: stepsError } = await supabase
-          .from("routine_steps")
+          .from("tasks")
           .insert(steps);
 
         if (stepsError) throw stepsError;
@@ -160,3 +162,46 @@ export async function saveGeneratedPlan(userId: string, plan: PlanGeneration) {
 
   return planRow;
 }
+
+export const getTodaysSessions = async () => {
+  const user = await getUser();
+
+  const today = new Date().getDay(); // 0-6
+
+  const { data: routines, error } = await supabase
+    .from("routines")
+    .select(
+      `
+    id,
+    title,
+    frequency,
+    days_of_week,
+    tasks (
+      id,
+      title
+    )
+  `,
+    )
+    .eq("user_id", user.id)
+    .eq("active", true);
+
+  if (routines === null) {
+    console.log("No routines found for user:", user.id);
+    return { todaysRoutines: [], todaysTasks: [] };
+  }
+  const todaysRoutines = routines.filter(
+    (routine) =>
+      routine.frequency === "daily" ||
+      (routine.frequency === "weekly" && routine.days_of_week?.includes(today)),
+  );
+
+  const todaysTasks = todaysRoutines.flatMap((routine) =>
+    routine.tasks.map((step) => ({
+      routineId: routine.id,
+      routineTitle: routine.title,
+      taskId: step.id,
+      taskTitle: step.title,
+    })),
+  );
+  return { todaysRoutines, todaysTasks };
+};

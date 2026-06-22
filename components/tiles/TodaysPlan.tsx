@@ -1,60 +1,40 @@
-import { PlanGeneration } from "@/types/PlanGeneration";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Card from "../ui/Card";
 
-export default function TodaysPlan({
-  plan_json,
-}: {
-  plan_json: PlanGeneration;
-}) {
+export default function TodaysPlan({ tasks }: { tasks: any }) {
   const { colors } = useTheme();
 
   return (
     <Card>
       <View style={styles.headerContainer}>
         <Text style={[styles.titleText, { color: colors.text }]}>
-          Today's Plan
+          TODAY'S TASKS
         </Text>
+
+        <Text style={[styles.titleSubText]}>{tasks.length} remaining</Text>
       </View>
-      {plan_json &&
-        plan_json.commitments.map((commitment, index) => (
-          <View key={index}>
-            {commitment.routines.map((routine, i) => (
-              <View key={`${index}${i}`}>
-                {routine.tasks.map((task, j) => (
-                  <View key={`${index}${i}${j}`}>
-                    <CheckListItem
-                      title={`${task.title}`}
-                      grayOnCheck={false}
-                      isLastElement={
-                        index === plan_json.commitments.length - 1 &&
-                        i === commitment.routines.length - 1 &&
-                        j === routine.tasks.length - 1
-                      }
-                    />
-                  </View>
-                ))}
-              </View>
-            ))}
-          </View>
-        ))}
+      {tasks.map((task: any, index: number) => (
+        <View key={index}>
+          <CheckListItem title={`${task.taskTitle}`} grayOnCheck={false} />
+        </View>
+      ))}
     </Card>
   );
 }
 
 export const CheckListItem = ({
   title,
-  isLastElement = false,
   defaultChecked = false,
   grayOnCheck = true,
+  children,
 }: {
-  title: string;
-  isLastElement?: boolean;
+  title?: string;
   defaultChecked?: boolean;
   grayOnCheck?: boolean;
+  children?: React.ReactNode;
 }) => {
   const { colors } = useTheme();
   const [isChecked, setIsChecked] = useState(defaultChecked);
@@ -67,26 +47,24 @@ export const CheckListItem = ({
         style={[styles.circle, isChecked ? styles.complete : styles.incomplete]}
       >
         {isChecked && (
-          <MaterialCommunityIcons name="check" color={colors.text} size={10} />
+          <MaterialCommunityIcons name="check" color="black" size={14} />
         )}
       </View>
-      {/* bottom line */}
-      {!isLastElement && <View style={styles.bottomLine} />}
-      <Text
-        style={{
-          fontSize: 16,
-          color: isChecked
-            ? grayOnCheck
-              ? "gray"
-              : colors.text
-            : !grayOnCheck
-              ? colors.text
-              : "gray",
-          paddingLeft: 20,
-        }}
-      >
-        {title}
-      </Text>
+      <View style={{ paddingLeft: 10 }}>
+        {title && (
+          <Text
+            style={{
+              fontSize: 14,
+              color: isChecked ? "#A1A1AA" : colors.text,
+              textDecorationLine: isChecked ? "line-through" : "none",
+              letterSpacing: 0.5,
+            }}
+          >
+            {title}
+          </Text>
+        )}
+        {children}
+      </View>
     </Pressable>
   );
 };
@@ -96,40 +74,41 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingBottom: 10,
   },
   titleText: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 14,
+    color: "#F5F5F5",
+    fontWeight: 600,
+    letterSpacing: 1,
+  },
+  titleSubText: {
+    fontSize: 12,
+    color: "#A1A1AA",
+    fontWeight: 600,
   },
   checkListItem: {
     padding: 5,
     display: "flex",
     flexDirection: "row",
+    alignItems: "center",
   },
   circle: {
     borderRadius: 100,
     height: 20,
     width: 20,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: "lightgray",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
   },
   incomplete: {
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: "lightgray",
   },
   complete: {
-    backgroundColor: "rgb(103, 189, 122)",
-  },
-  bottomLine: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "lightgray",
-    position: "relative",
-    right: 10,
-    top: 20,
-    height: 10,
+    backgroundColor: "#A1A1AA",
   },
 });

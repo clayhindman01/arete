@@ -9,7 +9,7 @@ export default function Card({
   style?: object;
 }) {
   return (
-    <View style={[styles.container, { backgroundColor: "#1e1e2d" }, style]}>
+    <View style={[styles.container, { backgroundColor: "#111318" }, style]}>
       {children}
     </View>
   );
@@ -22,6 +22,16 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(85, 84, 84, 0.5)",
+    borderColor: "#232833",
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+
+    elevation: 4,
+    // background: "linear-gradient(180deg,rgba(20, 23, 31, 0.95) 0%,rgba(13, 15, 20, 0.95) 100%)",
   },
 });

@@ -1,70 +1,87 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import Card from "../ui/Card";
 
-export default function DailyCheckin() {
+export default function DailyCheckin({
+  dailyCheckInComplete,
+  setDailyCheckInComplete,
+}: {
+  dailyCheckInComplete: boolean;
+  setDailyCheckInComplete: (complete: boolean) => void;
+}) {
   const { colors } = useTheme();
   const router = useRouter();
 
-  const [isUserCheckedIn, setIsUserCheckedIn] = useState(false);
+  const handlePress = () => {
+    router.navigate("/modal");
+    setDailyCheckInComplete(true);
+  };
 
-  if (!isUserCheckedIn)
-    return (
-      <Card
+  return (
+    <Card
+      style={{
+        backgroundColor: dailyCheckInComplete
+          ? "rgba(34, 197, 94, 0.08)"
+          : "rgba(245, 158, 11, 0.35)",
+      }}
+    >
+      <View
         style={{
-          backgroundColor: "rgb(51, 51, 51)",
+          display: "flex",
+          flexDirection: "row",
+          gap: 10,
         }}
       >
-        <TouchableOpacity
-          onPress={() => {
-            router.navigate("/modal");
-            setIsUserCheckedIn(true);
-          }}
-          style={{
-            height: 60,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
+        <MaterialCommunityIcons
+          name="calendar"
+          color={
+            dailyCheckInComplete
+              ? "rgba(34, 197, 94, 0.7)"
+              : "rgba(245, 158, 11, 0.7)"
+          }
+          size={40}
+        />
+        <View>
           <Text
             style={{
               color: colors.text,
-              fontWeight: "bold",
-              fontSize: 18,
+              fontWeight: 600,
+              fontSize: 14,
+              letterSpacing: 1,
             }}
           >
-            Complete Daily Check-in
+            DAILY CHECK-IN
           </Text>
-        </TouchableOpacity>
-      </Card>
-    );
-
-  return (
-    <Card style={{ backgroundColor: "rgb(107, 145, 115)" }}>
-      <View
+          {!dailyCheckInComplete && (
+            <Text style={{ fontSize: 12, color: "#A1A1AA" }}>2 minutes</Text>
+          )}
+          <Text style={{ fontSize: 12, color: "#A1A1AA", paddingTop: 5 }}>
+            {dailyCheckInComplete
+              ? "Completed"
+              : "Reflect on yesterday and prepare for today."}
+          </Text>
+        </View>
+      </View>
+      <TouchableOpacity
+        onPress={handlePress}
         style={{
-          height: 60,
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          backgroundColor: dailyCheckInComplete
+            ? "rgba(34, 197, 94, 0.2)"
+            : "rgba(245, 158, 11, 0.5)",
+          marginTop: 10,
+          padding: 10,
+          borderRadius: 5,
         }}
       >
-        <MaterialCommunityIcons name="check" color={colors.text} size={35} />
-        <Text
-          style={{
-            color: colors.text,
-            fontWeight: "bold",
-            fontSize: 18,
-            paddingTop: 5,
-          }}
-        >
-          Checked-in!
+        <Text style={{ color: colors.text, fontWeight: 500, letterSpacing: 1 }}>
+          {dailyCheckInComplete ? "View Responses" : "Start Check-in"}
         </Text>
-      </View>
+      </TouchableOpacity>
     </Card>
   );
 }

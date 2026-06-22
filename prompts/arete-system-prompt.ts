@@ -148,12 +148,13 @@ Return JSON in exactly this structure:
         {
           "title": "string",
           "frequency": "daily|weekly",
-          "days_of_week": [0,1,2,3,4,5,6],
+          "days_of_week": [M,T,W,Th,F,S,Su],
           "tasks": [
             {
               "title": "string",
               "description": "string",
-              "estimated_minutes": 15
+              "estimated_minutes": 15,
+              "one_word_description": "string"
             }
           ]
         }
