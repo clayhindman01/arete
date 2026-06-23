@@ -73,5 +73,6 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 999,
     backgroundColor: "#F5F5F5",
+    // backgroundColor: "#A1A1AA",
   },
 });

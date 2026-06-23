@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 import Card from "../ui/Card";
 
-export default function DailyCheckin({
+export default function DailyCheckInTile({
   dailyCheckInComplete,
   setDailyCheckInComplete,
 }: {
@@ -15,7 +15,7 @@ export default function DailyCheckin({
   const router = useRouter();
 
   const handlePress = () => {
-    router.navigate("/modal");
+    router.navigate("/(tabs)/CheckIn");
     setDailyCheckInComplete(true);
   };
 
@@ -46,7 +46,9 @@ export default function DailyCheckin({
         <View>
           <Text
             style={{
-              color: colors.text,
+              color: dailyCheckInComplete
+                ? "rgba(34, 197, 94, 0.7)"
+                : "rgba(245, 158, 11, 0.7)",
               fontWeight: 600,
               fontSize: 14,
               letterSpacing: 1,
@@ -55,7 +57,16 @@ export default function DailyCheckin({
             DAILY CHECK-IN
           </Text>
           {!dailyCheckInComplete && (
-            <Text style={{ fontSize: 12, color: "#A1A1AA" }}>2 minutes</Text>
+            <Text
+              style={{
+                fontSize: 12,
+                color: dailyCheckInComplete
+                  ? "rgba(34, 197, 94, 0.7)"
+                  : "rgba(245, 158, 11, 0.7)",
+              }}
+            >
+              30 seconds
+            </Text>
           )}
           <Text style={{ fontSize: 12, color: "#A1A1AA", paddingTop: 5 }}>
             {dailyCheckInComplete

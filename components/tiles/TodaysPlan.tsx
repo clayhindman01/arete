@@ -4,7 +4,13 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Card from "../ui/Card";
 
-export default function TodaysPlan({ tasks }: { tasks: any }) {
+export default function TodaysPlan({
+  dailyCheckInComplete,
+  tasks,
+}: {
+  dailyCheckInComplete: boolean;
+  tasks: any;
+}) {
   const { colors } = useTheme();
 
   return (
@@ -16,6 +22,34 @@ export default function TodaysPlan({ tasks }: { tasks: any }) {
 
         <Text style={[styles.titleSubText]}>{tasks.length} remaining</Text>
       </View>
+      {!dailyCheckInComplete && (
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 5,
+            paddingLeft: 5,
+            paddingBottom: 5,
+          }}
+        >
+          <MaterialCommunityIcons
+            name="alert-outline"
+            color="rgba(245, 158, 11, 0.7)"
+            size={20}
+          />
+          <Text
+            style={{
+              color: "#A1A1AA",
+              letterSpacing: 1,
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            Check-in to personalize
+          </Text>
+        </View>
+      )}
       {tasks.map((task: any, index: number) => (
         <View key={index}>
           <CheckListItem title={`${task.taskTitle}`} grayOnCheck={false} />

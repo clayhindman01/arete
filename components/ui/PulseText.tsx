@@ -7,7 +7,7 @@ type PulseTextProps = {
 };
 
 const phases = [
-  "Arete = Excellence through Action",
+  `Arete: Excellence through Action`,
   "Become who you want to be through consistent action.",
 ];
 
@@ -73,10 +73,10 @@ const styles = StyleSheet.create({
   },
   text: {
     width: "80%",
-    fontSize: 28,
-    fontWeight: "800",
-    // color: "#00ffcc",
+    fontSize: 26,
+    fontWeight: "600",
     textAlign: "center",
-    lineHeight: 36,
+    lineHeight: 34,
+    letterSpacing: 2,
   },
 });

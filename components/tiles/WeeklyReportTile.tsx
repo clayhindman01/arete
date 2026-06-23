@@ -46,7 +46,9 @@ export default function WeeklyReportTile({
         <View>
           <Text
             style={{
-              color: colors.text,
+              color: weeklyReportComplete
+                ? "rgba(34, 197, 94, 0.7)"
+                : "rgba(99, 102, 241, 0.7)",
               fontWeight: 600,
               fontSize: 14,
               letterSpacing: 1,
@@ -54,7 +56,13 @@ export default function WeeklyReportTile({
           >
             WEEKLY REPORT
           </Text>
-          <Text style={{ fontSize: 12, color: "#A1A1AA", paddingTop: 5 }}>
+          <Text
+            style={{
+              fontSize: 12,
+              color: "#A1A1AA",
+              paddingTop: 5,
+            }}
+          >
             {weeklyReportComplete
               ? "Review your weekly report."
               : "Your perfomance review is ready!"}

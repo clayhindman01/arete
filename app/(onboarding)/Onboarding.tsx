@@ -32,7 +32,7 @@ export default function Onboarding() {
   const router = useRouter();
   const { profile, refreshProfile } = useProfile();
   const [showIntro, setShowIntro] = useState(true);
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(2);
   const [planData, setPlanData] = useState<PlanGeneration>();
   const [formData, setFormData] = useState<OnboardingData>({
     name: "",
@@ -121,7 +121,7 @@ export default function Onboarding() {
   };
 
   return (
-    <SafeAreaView style={[styles.page, { backgroundColor: "#020617" }]}>
+    <SafeAreaView style={[styles.page, { backgroundColor: "#09090B" }]}>
       {showIntro ? (
         <PulseText onAnimationComplete={() => setShowIntro(false)} />
       ) : (
@@ -237,7 +237,7 @@ export default function Onboarding() {
             {currentStep === 6 && planData && (
               <View style={styles.actions}>
                 <Button
-                  label="Complete"
+                  label="Create Plan"
                   type="primary"
                   onPress={handleComplete}
                 />
@@ -270,7 +270,8 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     fontSize: 24,
-    fontWeight: "800",
+    fontWeight: 600,
+    letterSpacing: 1,
     textAlign: "center",
     color: "#ecedee",
     marginBottom: 24,

@@ -1,4 +1,4 @@
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import Card from "../ui/Card";
 
 export default function StreakTile() {
@@ -21,9 +21,28 @@ export default function StreakTile() {
       >
         STREAK
       </Text>
-      <Text style={{ color: "#71717A", fontSize: 28, fontWeight: "bold" }}>
-        5
-      </Text>
+      <View
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: 5,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text
+          style={{
+            color: "#71717A",
+            fontSize: 28,
+            fontWeight: "bold",
+          }}
+        >
+          5
+        </Text>
+        <Text style={{ color: "#71717A", fontSize: 12, fontWeight: 500 }}>
+          Days
+        </Text>
+      </View>
     </Card>
   );
 }

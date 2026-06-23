@@ -83,7 +83,8 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 14,
     textAlign: "center",
-    fontWeight: "500",
+    fontWeight: 500,
+    letterSpacing: 1,
   },
   buttonTextSelected: {
     color: "#fff",

@@ -1,6 +1,7 @@
 import DailyProgress from "@/components/DailyProgress";
 import HabitsStreaksLayout from "@/components/HabitsStreaksLayout";
-import DailyCheckin from "@/components/tiles/DailyCheckIn";
+import DailyCheckInTile from "@/components/tiles/DailyCheckInTile";
+import EverythingCompletedTile from "@/components/tiles/EverythingCompletedTile";
 import TodaysPlan from "@/components/tiles/TodaysPlan";
 import WeeklyReportTile from "@/components/tiles/WeeklyReportTile";
 import Header from "@/components/ui/Header";
@@ -45,8 +46,7 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#020617" }}>
-        {/* <Header /> */}
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
         <View
           style={{
             flex: 1,
@@ -60,12 +60,18 @@ export default function Dashboard() {
     );
   }
 
-  if (getCurrentUser != null && activePlan) {
+  if (getCurrentUser != null && todaysSessions) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
         <Header />
         <View style={{ padding: 5, paddingVertical: 10 }}>
-          <DailyProgress completed={0} total={2} />
+          <DailyProgress
+            completed={0}
+            total={todaysSessions?.todaysTasks.length}
+          />
+          {dailyCheckInComplete && weeklyReportComplete && (
+            <EverythingCompletedTile />
+          )}
           {!weeklyReportComplete && (
             <WeeklyReportTile
               weeklyReportComplete={weeklyReportComplete}
@@ -73,15 +79,18 @@ export default function Dashboard() {
             />
           )}
           {!dailyCheckInComplete && (
-            <DailyCheckin
+            <DailyCheckInTile
               dailyCheckInComplete={dailyCheckInComplete}
               setDailyCheckInComplete={setDailyCheckInComplete}
             />
           )}
-          <TodaysPlan tasks={todaysSessions?.todaysTasks} />
+          <TodaysPlan
+            dailyCheckInComplete={dailyCheckInComplete}
+            tasks={todaysSessions?.todaysTasks}
+          />
           <HabitsStreaksLayout />
           {dailyCheckInComplete && (
-            <DailyCheckin
+            <DailyCheckInTile
               dailyCheckInComplete={dailyCheckInComplete}
               setDailyCheckInComplete={setDailyCheckInComplete}
             />

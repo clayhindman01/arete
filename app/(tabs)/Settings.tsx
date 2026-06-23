@@ -8,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Settings() {
   const { colors } = useTheme();
+  const router = useRouter();
 
   const accountabilityOptions: Array<optionsType> = [
     {
@@ -25,15 +26,17 @@ export default function Settings() {
   ];
 
   const handleSignOutPress = () => {
-    signOut();
+    signOut().then(() => {
+      router.navigate("/(auth)/Login");
+    });
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#020617" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
       <SettingsHeader />
       <SettingsDropdown
         options={accountabilityOptions}
-        title="Accountability"
+        title="Accountability Level"
         defaultOption={{ label: "Medium", value: "medium" }}
       />
       <SettingsDropdown
@@ -75,7 +78,14 @@ const SettingsDropdown = ({
         padding: 10,
       }}
     >
-      <Text style={{ color: colors.text, fontSize: 18, fontWeight: "bold" }}>
+      <Text
+        style={{
+          color: colors.text,
+          fontSize: 18,
+          fontWeight: 600,
+          letterSpacing: 1,
+        }}
+      >
         {title}
       </Text>
 
@@ -114,7 +124,11 @@ const SettingsDropdownOption = ({
           },
         ]}
       >
-        <Text style={{ color: colors.text, textAlign: "center" }}>{label}</Text>
+        <Text
+          style={{ color: colors.text, textAlign: "center", letterSpacing: 1 }}
+        >
+          {label}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -183,8 +197,9 @@ const SettingsButton = ({
           style={{
             color: !disabled ? colors.text : "gray",
             fontSize: 16,
+            letterSpacing: 1,
             textAlign: "center",
-            fontWeight: "bold",
+            fontWeight: 600,
           }}
         >
           {label}
