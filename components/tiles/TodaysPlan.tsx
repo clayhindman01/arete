@@ -1,3 +1,4 @@
+import { completeTask } from "@/lib/db";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
 import { useState } from "react";
@@ -20,7 +21,7 @@ export default function TodaysPlan({
           TODAY'S TASKS
         </Text>
 
-        <Text style={[styles.titleSubText]}>{tasks.length} remaining</Text>
+        {/* <Text style={[styles.titleSubText]}>{tasks.length} remaining</Text> */}
       </View>
       {!dailyCheckInComplete && (
         <View
@@ -52,7 +53,12 @@ export default function TodaysPlan({
       )}
       {tasks.map((task: any, index: number) => (
         <View key={index}>
-          <CheckListItem title={`${task.taskTitle}`} grayOnCheck={false} />
+          <CheckListItem
+            title={`${task.title}`}
+            defaultChecked={task.completed}
+            task={task}
+            grayOnCheck={false}
+          />
         </View>
       ))}
     </Card>
@@ -64,17 +70,26 @@ export const CheckListItem = ({
   defaultChecked = false,
   grayOnCheck = true,
   children,
+  task,
 }: {
   title?: string;
   defaultChecked?: boolean;
   grayOnCheck?: boolean;
   children?: React.ReactNode;
+  task?: any;
 }) => {
   const { colors } = useTheme();
   const [isChecked, setIsChecked] = useState(defaultChecked);
+
+  const handleTaskCompletion = () => {
+    if (task?.id) {
+      completeTask(task.id);
+    }
+    setIsChecked(!isChecked);
+  };
   return (
     <Pressable
-      onPress={() => setIsChecked(!isChecked)}
+      onPress={() => (task ? handleTaskCompletion() : setIsChecked(!isChecked))}
       style={styles.checkListItem}
     >
       <View

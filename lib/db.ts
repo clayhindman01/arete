@@ -1,4 +1,9 @@
-import { PlanGeneration } from "@/types/PlanGeneration";
+import {
+  Commitments,
+  PlanGeneration,
+  Routines,
+  Tasks,
+} from "@/types/PlanGeneration";
 import { supabase } from "./supabase";
 
 export async function getProfile() {
@@ -163,45 +168,162 @@ export async function saveGeneratedPlan(userId: string, plan: PlanGeneration) {
   return planRow;
 }
 
-export const getTodaysSessions = async () => {
+const DAY_MAP = ["Su", "M", "T", "W", "Th", "F", "S"] as const;
+
+function getToday() {
+  return DAY_MAP[new Date().getDay()];
+}
+
+type LatentTask = Tasks & {
+  commitment_title: string;
+  routine_title: string;
+  allowed_days: ("M" | "T" | "W" | "Th" | "F" | "S" | "Su")[];
+  frequency: "daily" | "weekly";
+};
+
+export async function createOrUpdateLatentPlan(planJson: any) {
+  const user = await getUser();
+  const today = new Date().toISOString().split("T")[0];
+
+  // 1. Build latent weekly pool
+  const weeklyTaskPool = planJson.commitments.flatMap(
+    (commitment: Commitments) =>
+      commitment.routines.flatMap((routine: Routines) =>
+        routine.tasks.map((task) => ({
+          title: task.title,
+          description: task.description,
+          estimated_minutes: task.estimated_minutes,
+          one_word_description: task.one_word_description,
+
+          commitment_title: commitment.title,
+          routine_title: routine.title,
+          frequency: routine.frequency,
+          allowed_days: routine.days_of_week,
+        })),
+      ),
+  );
+
+  // 2. Upsert into user_latent_plans (ONLY ONCE PER DAY)
+  const { data, error } = await supabase
+    .from("user_latent_plans")
+    .upsert(
+      {
+        user_id: user.id,
+        generated_for_date: today,
+        weekly_task_pool: weeklyTaskPool,
+      },
+      {
+        onConflict: "user_id,generated_for_date",
+      },
+    )
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}
+
+export async function getOrCreatePreCheckinDailyPlan(
+  weeklyTaskPool: LatentTask[],
+) {
+  const today = getToday();
   const user = await getUser();
 
-  const today = new Date().getDay(); // 0-6
-
-  const { data: routines, error } = await supabase
-    .from("routines")
+  const { data: existingPlan } = await supabase
+    .from("daily_plans")
     .select(
       `
     id,
-    title,
-    frequency,
-    days_of_week,
-    tasks (
+    user_id,
+    is_current,
+    ai_summary,
+    created_at,
+    daily_tasks (
       id,
-      title
+      title,
+      description,
+      estimated_minutes,
+      sort_order,
+      completed,
+      completed_at
     )
   `,
     )
     .eq("user_id", user.id)
-    .eq("active", true);
+    .eq("is_current", true)
+    .maybeSingle();
 
-  if (routines === null) {
-    console.log("No routines found for user:", user.id);
-    return { todaysRoutines: [], todaysTasks: [] };
+  if (existingPlan && existingPlan.daily_tasks) {
+    return existingPlan.daily_tasks;
   }
-  const todaysRoutines = routines.filter(
-    (routine) =>
-      routine.frequency === "daily" ||
-      (routine.frequency === "weekly" && routine.days_of_week?.includes(today)),
+
+  // 1. Filter tasks for today from latent pool
+  const eligibleTasks = weeklyTaskPool.filter((task) =>
+    task.allowed_days.includes(today),
   );
 
-  const todaysTasks = todaysRoutines.flatMap((routine) =>
-    routine.tasks.map((step) => ({
-      routineId: routine.id,
-      routineTitle: routine.title,
-      taskId: step.id,
-      taskTitle: step.title,
-    })),
-  );
-  return { todaysRoutines, todaysTasks };
-};
+  // 2. Build draft task set (no AI yet)
+  const selectedTasks = eligibleTasks.slice(0, 6).map((task, index) => ({
+    title: task.title,
+    description: task.description,
+    estimated_minutes: task.estimated_minutes,
+    sort_order: index,
+  }));
+
+  // 3. Close any existing active plan (draft or previous)
+  await supabase
+    .from("daily_plans")
+    .update({ is_current: false })
+    .eq("user_id", user.id)
+    .eq("is_current", true);
+
+  // 4. Create NEW draft daily plan (pre-check-in state)
+  const { data: plan, error: planError } = await supabase
+    .from("daily_plans")
+    .insert({
+      user_id: user.id,
+      is_current: true,
+      ai_summary: "Draft plan generated from latent pool (pre check-in)",
+    })
+    .select()
+    .single();
+
+  if (planError) throw planError;
+
+  // 5. Insert draft tasks
+  const { data: tasks, error: taskError } = await supabase
+    .from("daily_tasks")
+    .insert(
+      selectedTasks.map((t) => ({
+        ...t,
+        plan_id: plan.id,
+      })),
+    );
+
+  if (taskError) throw taskError;
+
+  return tasks;
+}
+
+export async function completeTask(taskId: string) {
+  const user = await getUser();
+
+  if (!user?.id) {
+    throw new Error("User not authenticated");
+  }
+
+  const { data, error } = await supabase
+    .from("daily_tasks")
+    .update({
+      completed: true,
+      completed_at: new Date().toISOString(),
+    })
+    .eq("id", taskId)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}

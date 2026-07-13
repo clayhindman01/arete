@@ -6,7 +6,11 @@ import TodaysPlan from "@/components/tiles/TodaysPlan";
 import WeeklyReportTile from "@/components/tiles/WeeklyReportTile";
 import Header from "@/components/ui/Header";
 import { getCurrentUser } from "@/lib/auth";
-import { getActivePlan, getTodaysSessions } from "@/lib/db";
+import {
+  createOrUpdateLatentPlan,
+  getActivePlan,
+  getOrCreatePreCheckinDailyPlan,
+} from "@/lib/db";
 import { PlanGeneration } from "@/types/PlanGeneration";
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
@@ -17,24 +21,21 @@ export default function Dashboard() {
   const [activePlan, setActivePlan] = useState<{
     plan_json: PlanGeneration;
   } | null>(null);
-  const [todaysSessions, setTodaysSessions] = useState<{
-    todaysRoutines: any[];
-    todaysTasks: any[];
-  } | null>(null);
+  const [todaysSessions, setTodaysSessions] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [dailyCheckInComplete, setDailyCheckInComplete] = useState(false);
   const [weeklyReportComplete, setWeeklyReportComplete] = useState(false);
 
   useEffect(() => {
-    // Get users active plans using getACtivePlan and log the result
     const fetchActivePlan = async () => {
       try {
-        const [plan, todaysSessions] = await Promise.all([
-          getActivePlan(),
-          getTodaysSessions(),
-        ]);
+        const [plan] = await Promise.all([getActivePlan()]);
+        const latentPlan = await createOrUpdateLatentPlan(plan.plan_json);
+        const todaysTasks = await getOrCreatePreCheckinDailyPlan(
+          latentPlan.weekly_task_pool,
+        );
+        setTodaysSessions(todaysTasks);
         setActivePlan(plan);
-        setTodaysSessions(todaysSessions);
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching active plan:", error);
@@ -67,7 +68,8 @@ export default function Dashboard() {
         <View style={{ padding: 5, paddingVertical: 10 }}>
           <DailyProgress
             completed={0}
-            total={todaysSessions?.todaysTasks.length}
+            total={todaysSessions.length}
+            // total={2}
           />
           {dailyCheckInComplete && weeklyReportComplete && (
             <EverythingCompletedTile />
@@ -86,7 +88,7 @@ export default function Dashboard() {
           )}
           <TodaysPlan
             dailyCheckInComplete={dailyCheckInComplete}
-            tasks={todaysSessions?.todaysTasks}
+            tasks={todaysSessions}
           />
           <HabitsStreaksLayout />
           {dailyCheckInComplete && (
