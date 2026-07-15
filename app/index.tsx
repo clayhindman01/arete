@@ -1,6 +1,6 @@
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
 import { useSession } from "@/lib/auth";
 import { getProfile } from "@/lib/db";
@@ -44,7 +44,7 @@ export default function Index() {
           backgroundColor: "#09090B",
         }}
       >
-        {/* <ActivityIndicator size="large" /> */}
+        <ActivityIndicator size="large" color="white" />
       </View>
     );
   }

@@ -34,16 +34,6 @@ export default function Settings() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
       <SettingsHeader />
-      <SettingsDropdown
-        options={accountabilityOptions}
-        title="Accountability Level"
-        defaultOption={{ label: "Medium", value: "medium" }}
-      />
-      <SettingsDropdown
-        options={motivationOptions}
-        title="Motivation Style"
-        defaultOption={{ label: "Direct", value: "directly" }}
-      />
 
       <SettingsButton label="Manage Subscription" />
       <SettingsButton label="Create a New Goal" disabled={true} />

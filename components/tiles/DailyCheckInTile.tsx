@@ -7,15 +7,20 @@ import Card from "../ui/Card";
 export default function DailyCheckInTile({
   dailyCheckInComplete,
   setDailyCheckInComplete,
+  todaysTasks,
 }: {
   dailyCheckInComplete: boolean;
   setDailyCheckInComplete: (complete: boolean) => void;
+  todaysTasks: any;
 }) {
   const { colors } = useTheme();
   const router = useRouter();
 
   const handlePress = () => {
-    router.navigate("/(tabs)/CheckIn");
+    router.push({
+      pathname: "/(tabs)/CheckIn",
+      params: { todaysTasks: JSON.stringify(todaysTasks), isDailyCheckInComplete: dailyCheckInComplete? "true" : "false",  },
+    });
     setDailyCheckInComplete(true);
   };
 

@@ -1,4 +1,5 @@
 import { ARETE_SYSTEM_PROMPT } from "@/prompts/arete-system-prompt";
+import { ADAPTIVE_PLAN_SYSTEM_PROMPT } from "@/prompts/daily-checkin-plan-adaption";
 import { buildUserPlanPrompt } from "@/prompts/prompt-utils";
 import { OnboardingData } from "@/types/onboarding";
 import { GoogleGenAI } from "@google/genai";
@@ -39,4 +40,31 @@ async function callModelWithRetry(fn: () => Promise<any>, maxRetries = 5) {
       delay *= 2;
     }
   }
+}
+
+type AdaptivePlanInput = {
+  tasks: any[];
+  checkIn: any;
+};
+
+export async function generateAdaptiveDailyPlan({
+  tasks,
+  checkIn,
+}: AdaptivePlanInput) {
+
+  return callModelWithRetry(() =>
+    ai.models.generateContent({
+      model: "gemini-3.1-flash-lite",
+      config: {
+        systemInstruction: ADAPTIVE_PLAN_SYSTEM_PROMPT,
+        responseMimeType: "application/json",
+      },
+      contents: JSON.stringify({
+        current_tasks: tasks,
+        check_in: checkIn,
+      }),
+    }),
+  );
+
+
 }

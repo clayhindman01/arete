@@ -1,4 +1,4 @@
-import { completeTask } from "@/lib/db";
+import { toggleTask } from "@/lib/db";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
 import { useState } from "react";
@@ -7,10 +7,14 @@ import Card from "../ui/Card";
 
 export default function TodaysPlan({
   dailyCheckInComplete,
-  tasks,
+  todaysTasks,
+  setTodaysTasks,
+  aiSummary,
 }: {
   dailyCheckInComplete: boolean;
-  tasks: any;
+  todaysTasks: any;
+  setTodaysTasks: (tasks: any) => void;
+  aiSummary: string;
 }) {
   const { colors } = useTheme();
 
@@ -23,7 +27,7 @@ export default function TodaysPlan({
 
         {/* <Text style={[styles.titleSubText]}>{tasks.length} remaining</Text> */}
       </View>
-      {!dailyCheckInComplete && (
+      {!dailyCheckInComplete ? (
         <View
           style={{
             display: "flex",
@@ -47,17 +51,41 @@ export default function TodaysPlan({
               fontWeight: 600,
             }}
           >
-            Check-in to personalize
+            Complete Daily Check-in to personalize
+          </Text>
+        </View>
+      ): (
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 5,
+            paddingLeft: 5,
+            paddingBottom: 5,
+          }}
+        >
+          <Text
+            style={{
+              color: "#A1A1AA",
+              letterSpacing: 1,
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            {aiSummary}
           </Text>
         </View>
       )}
-      {tasks.map((task: any, index: number) => (
+      {todaysTasks.map((task: any, index: number) => (
         <View key={index}>
           <CheckListItem
-            title={`${task.title}`}
+            title={task.title}
+            description={task.description}
             defaultChecked={task.completed}
             task={task}
             grayOnCheck={false}
+            setTodaysTasks={setTodaysTasks}
           />
         </View>
       ))}
@@ -68,22 +96,45 @@ export default function TodaysPlan({
 export const CheckListItem = ({
   title,
   defaultChecked = false,
+  description,
   grayOnCheck = true,
   children,
+  setTodaysTasks,
   task,
 }: {
   title?: string;
   defaultChecked?: boolean;
+  description?: string;
   grayOnCheck?: boolean;
   children?: React.ReactNode;
+  setTodaysTasks?: (tasks: any) => void;
   task?: any;
 }) => {
   const { colors } = useTheme();
   const [isChecked, setIsChecked] = useState(defaultChecked);
 
+  const formatTime = (minutes: number) => {
+    if (minutes < 60) {
+      return `${minutes}m`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
+
   const handleTaskCompletion = () => {
-    if (task?.id) {
-      completeTask(task.id);
+    if (task?.id && setTodaysTasks) {
+       setTodaysTasks((prev: any) =>
+        prev.map((t: any) =>
+          t.id === task.id
+            ? {
+                ...t,
+                completed: !t.completed,
+              }
+            : t
+        )
+      );
+      toggleTask(task.id, !isChecked);
     }
     setIsChecked(!isChecked);
   };
@@ -99,17 +150,43 @@ export const CheckListItem = ({
           <MaterialCommunityIcons name="check" color="black" size={14} />
         )}
       </View>
-      <View style={{ paddingLeft: 10 }}>
+      <View style={{ paddingHorizontal: 10 }}>
         {title && (
           <Text
             style={{
               fontSize: 14,
+              fontWeight: 600,
               color: isChecked ? "#A1A1AA" : colors.text,
               textDecorationLine: isChecked ? "line-through" : "none",
-              letterSpacing: 0.5,
+              letterSpacing: 1,
             }}
           >
             {title}
+          </Text>
+        )}
+        {description && (
+          <Text
+            style={{
+              fontSize: 12,
+              color: isChecked ? "#A1A1AA" : colors.text,
+              textDecorationLine: isChecked ? "line-through" : "none",
+              letterSpacing: 1,
+            }}
+          >
+            {description}
+          </Text>
+        )}
+        {task.estimated_minutes && (
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: isChecked ? "#A1A1AA" : colors.text,
+              textDecorationLine: isChecked ? "line-through" : "none",
+              letterSpacing: 1,
+            }}
+          >
+            {`${formatTime(task.estimated_minutes)}`}
           </Text>
         )}
         {children}

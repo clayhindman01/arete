@@ -10,41 +10,64 @@ import {
   createOrUpdateLatentPlan,
   getActivePlan,
   getOrCreatePreCheckinDailyPlan,
+  hasCompletedDailyCheckInToday,
 } from "@/lib/db";
-import { PlanGeneration } from "@/types/PlanGeneration";
-import { Redirect } from "expo-router";
-import { useEffect, useState } from "react";
+import { Tasks } from "@/types/PlanGeneration";
+import { Redirect, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Dashboard() {
-  const [activePlan, setActivePlan] = useState<{
-    plan_json: PlanGeneration;
-  } | null>(null);
-  const [todaysSessions, setTodaysSessions] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [dailyCheckInComplete, setDailyCheckInComplete] = useState(false);
-  const [weeklyReportComplete, setWeeklyReportComplete] = useState(false);
+  const [todaysTasks, setTodaysTasks] = useState<Tasks[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [dailyCheckInComplete, setDailyCheckInComplete] = useState<boolean>(false);
+  const [weeklyReportComplete, setWeeklyReportComplete] = useState<boolean>(false);
+  const [ isWeeklyReportAvailable, setIsWeeklyReportAvailable ] = useState<boolean>(false);
+  const [aiSummary, setAiSummary] = useState<string>("");
 
-  useEffect(() => {
-    const fetchActivePlan = async () => {
-      try {
-        const [plan] = await Promise.all([getActivePlan()]);
-        const latentPlan = await createOrUpdateLatentPlan(plan.plan_json);
+  const [latentPlan, setLatentPlan] = useState<any | null>(null);
+  
+  const fetchActivePlan = async () => {
+    try {
+      const plan = await getActivePlan();
+      await createOrUpdateLatentPlan(plan.plan_json).then(async (latentPlan) => {
+        setLatentPlan(latentPlan);
+        console.log("Latent Plan:", latentPlan.weekly_task_pool);
         const todaysTasks = await getOrCreatePreCheckinDailyPlan(
           latentPlan.weekly_task_pool,
         );
-        setTodaysSessions(todaysTasks);
-        setActivePlan(plan);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching active plan:", error);
-      }
-    };
+        console.log("Today's Tasks:", todaysTasks);
+        setTodaysTasks(todaysTasks.tasks ?? []);
+        setAiSummary(todaysTasks.aiSummary ?? "");
+      setIsLoading(false);
+      });
+      
+      
+    } catch (error) {
+      console.error("Error fetching active plan:", error);
+    }
+  };
+
+  useEffect(() => {
+    hasCompletedDailyCheckInToday().then((completed) => {
+      setDailyCheckInComplete(completed);
+    });
 
     fetchActivePlan();
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      console.log("Dashboard screen focused, refreshing data...");
+      fetchActivePlan();
+    }, [])
+  );
+
+  const completedTasks = useMemo(
+  () => todaysTasks.filter(task => task.completed).length,
+  [todaysTasks]
+);
   if (isLoading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
@@ -61,20 +84,19 @@ export default function Dashboard() {
     );
   }
 
-  if (getCurrentUser != null && todaysSessions) {
+  if (getCurrentUser != null && todaysTasks) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
         <Header />
         <View style={{ padding: 5, paddingVertical: 10 }}>
           <DailyProgress
-            completed={0}
-            total={todaysSessions.length}
-            // total={2}
+            completed={completedTasks}
+            total={todaysTasks.length}
           />
-          {dailyCheckInComplete && weeklyReportComplete && (
+          {dailyCheckInComplete && (completedTasks === todaysTasks.length) && (
             <EverythingCompletedTile />
           )}
-          {!weeklyReportComplete && (
+          {isWeeklyReportAvailable && !weeklyReportComplete && (
             <WeeklyReportTile
               weeklyReportComplete={weeklyReportComplete}
               setWeeklyReportComplete={setWeeklyReportComplete}
@@ -84,20 +106,24 @@ export default function Dashboard() {
             <DailyCheckInTile
               dailyCheckInComplete={dailyCheckInComplete}
               setDailyCheckInComplete={setDailyCheckInComplete}
+              todaysTasks={latentPlan}
             />
           )}
           <TodaysPlan
+            aiSummary = {aiSummary}
             dailyCheckInComplete={dailyCheckInComplete}
-            tasks={todaysSessions}
+            todaysTasks={todaysTasks}
+            setTodaysTasks={setTodaysTasks}
           />
           <HabitsStreaksLayout />
           {dailyCheckInComplete && (
             <DailyCheckInTile
               dailyCheckInComplete={dailyCheckInComplete}
               setDailyCheckInComplete={setDailyCheckInComplete}
+              todaysTasks={todaysTasks}
             />
           )}
-          {weeklyReportComplete && (
+          {isWeeklyReportAvailable && weeklyReportComplete && (
             <WeeklyReportTile
               weeklyReportComplete={weeklyReportComplete}
               setWeeklyReportComplete={setWeeklyReportComplete}

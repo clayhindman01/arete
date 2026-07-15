@@ -45,7 +45,7 @@ const StreakItem = () => {
     <View style={styles.headerContainer}>
       <HabitBox />
       <HabitBox />
-      <HabitBox completed={true} />
+      <HabitBox />
       <HabitBox />
       <HabitBox />
       <HabitBox />

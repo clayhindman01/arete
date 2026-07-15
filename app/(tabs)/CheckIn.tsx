@@ -1,18 +1,21 @@
 import Button from "@/components/ui/Button";
 import ButtonGroup from "@/components/ui/ButtonGroup";
 import TextField from "@/components/ui/TextField";
+import { generateAdaptiveDailyPlan } from "@/lib/ai";
+import { getCurrentUser } from "@/lib/auth";
+import { createDailyCheckIn, saveAdaptiveDailyPlan } from "@/lib/db";
 import { AVAILABLE_TIME_OPTIONS, AvailableTime } from "@/types/onboarding";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -41,7 +44,7 @@ const ENERGY_SCALE = [
   { label: "High on life", value: 5 as EnergyScale },
 ];
 
-interface CheckInValue {
+export interface CheckInValue {
   yesterdayDifficulty: YesterdayDifficulty | null;
   energyScale: EnergyScale | null;
   availableTime: AvailableTime | null;
@@ -50,6 +53,7 @@ interface CheckInValue {
 
 export default function CheckIn() {
   const [currentStep, setCurrentStep] = useState<StepType>(1);
+  const params = useLocalSearchParams();
   const [checkInValue, setCheckInValue] = useState<CheckInValue>({
     yesterdayDifficulty: null,
     energyScale: null,
@@ -57,13 +61,29 @@ export default function CheckIn() {
     todaysImpediments: "",
   });
 
+
+  console.log("todaysTasks in CheckIn.tsx", params.todaysTasks);
   const router = useRouter();
 
-  const handleSubmit = () => {
-    console.log(checkInValue);
-    setCurrentStep(1);
-    router.back();
-  };
+  async function submitCheckIn(checkIn: any){
+    await createDailyCheckIn(checkIn);
+
+    const user = await getCurrentUser();
+
+    generateAdaptiveDailyPlan({
+      tasks: JSON.parse(params.todaysTasks as string),
+      checkIn,
+    }).then(async (res) => {
+      console.log("Adaptive Plan:", JSON.parse(res.text));
+      await saveAdaptiveDailyPlan(
+        JSON.parse(res.text),
+        user.id
+      );
+    }).then(() => {
+      setCurrentStep(1);
+      router.back();
+    })
+  }
 
   return (
     <SafeAreaView style={[styles.page, { backgroundColor: "#09090B" }]}>
@@ -151,7 +171,7 @@ export default function CheckIn() {
                 <Button
                   label="Complete Check-in"
                   type="primary"
-                  onPress={handleSubmit}
+                  onPress={() => submitCheckIn(checkInValue)}
                 />
               </View>
             </View>
