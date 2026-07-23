@@ -64,7 +64,7 @@ export async function getActivePlan() {
     .eq("user_id", user.id)
     .eq("active", true)
     .order("version", { ascending: false })
-    .limit(1)
+    // .limit(1)
     .single();
 
   if (error) throw error;

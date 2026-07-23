@@ -1,12 +1,11 @@
 import {
   Commitments,
-  DaysOfWeek,
-  Routines,
-  Tasks,
+  DaysOfWeek
 } from "@/types/PlanGeneration";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
-import { StyleSheet, Text, View } from "react-native";
-import { CheckListItem } from "../tiles/TodaysPlan";
+import { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function PlanComponent({
   commitment,
@@ -53,15 +52,6 @@ export default function PlanComponent({
     return days.slice(0, -1).join(", ") + " and " + days.slice(-1);
   };
 
-  const createPlanChecklistLabel = (routine: Routines, task: Tasks) => {
-    console.log("task", task);
-    if (routine.frequency === "weekly") {
-      const days = getDayOfWeekValues(routine.days_of_week);
-      return `${task.title} ${formatDays(days)}\nEstimated Time: ${task.estimated_minutes} min`;
-    } else {
-      return `${task.description}\nEstimated Time: ${task.estimated_minutes} min`;
-    }
-  };
   return (
     <View style={styles.container}>
       <Text style={styles.titleText}>{commitment.title}</Text>
@@ -69,18 +59,17 @@ export default function PlanComponent({
         <View key={index}>
           {routine.tasks.map((task, i) => (
             <View key={`${index}${i}`}>
-              <CheckListItem defaultChecked={true} grayOnCheck={false}>
-                <Text style={styles.taskTitle}>{task.title}</Text>
-                <Text style={{ color: colors.text }}>{task.description}</Text>
-                <Text style={{ color: colors.text }}>
+              <CheckListItem  title={task.title} description={task.description} task={task}>
+                <Text style={{  fontSize: 12,
+                  fontWeight: 600,
+                  color:  colors.text,
+                  letterSpacing: 1, 
+                }}>
                   Frequency:{" "}
                   {routine.frequency === "daily"
                     ? "Daily"
                     : "Weekly on " +
                       formatDays(getDayOfWeekValues(routine.days_of_week))}
-                </Text>
-                <Text style={{ color: colors.text }}>
-                  Estimated Time: {task.estimated_minutes} min
                 </Text>
               </CheckListItem>
             </View>
@@ -90,6 +79,85 @@ export default function PlanComponent({
     </View>
   );
 }
+
+const CheckListItem = ({
+  title,
+  defaultChecked = true,
+  description,
+  children,
+  task,
+}: {
+  title?: string;
+  defaultChecked?: boolean;
+  description?: string;
+  children?: React.ReactNode;
+  task?: any;
+}) => {
+  const { colors } = useTheme();
+  const [isChecked, setIsChecked] = useState(defaultChecked);
+
+  const formatTime = (minutes: number) => {
+    if (minutes < 60) {
+      return `${minutes}m`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
+
+  return (
+    <Pressable
+      onPress={() => setIsChecked(!isChecked)}
+      style={styles.checkListItem}
+    >
+      <View
+        style={[styles.circle, isChecked ? styles.complete : styles.incomplete]}
+      >
+        {isChecked && (
+          <MaterialCommunityIcons name="check" color="black" size={14} />
+        )}
+      </View>
+      <View style={{ paddingHorizontal: 10 }}>
+        {title && (
+          <Text
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: isChecked ? colors.text : "#A1A1AA",
+              letterSpacing: 1,
+            }}
+          >
+            {title}
+          </Text>
+        )}
+        {description && (
+          <Text
+            style={{
+              fontSize: 12,
+              color: isChecked ? colors.text: "#A1A1AA",
+              letterSpacing: 1,
+            }}
+          >
+            {description}
+          </Text>
+        )}
+        {task.estimated_minutes && (
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: isChecked ? colors.text : "#A1A1AA",
+              letterSpacing: 1,
+            }}
+          >
+            {`${formatTime(task.estimated_minutes)}`}
+          </Text>
+        )}
+        {children}
+      </View>
+    </Pressable>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -112,5 +180,28 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 20,
     backgroundColor: "gray",
+  },
+  checkListItem: {
+    padding: 5,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  circle: {
+    borderRadius: 100,
+    height: 20,
+    width: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "lightgray",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  incomplete: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "lightgray",
+  },
+  complete: {
+    backgroundColor: "#A1A1AA",
   },
 });

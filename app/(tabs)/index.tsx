@@ -2,6 +2,7 @@ import DailyProgress from "@/components/DailyProgress";
 import HabitsStreaksLayout from "@/components/HabitsStreaksLayout";
 import DailyCheckInTile from "@/components/tiles/DailyCheckInTile";
 import EverythingCompletedTile from "@/components/tiles/EverythingCompletedTile";
+import InsightsTile from "@/components/tiles/InsightsTile";
 import TodaysPlan from "@/components/tiles/TodaysPlan";
 import WeeklyReportTile from "@/components/tiles/WeeklyReportTile";
 import Header from "@/components/ui/Header";
@@ -15,7 +16,7 @@ import {
 import { Tasks } from "@/types/PlanGeneration";
 import { Redirect, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Dashboard() {
@@ -33,11 +34,9 @@ export default function Dashboard() {
       const plan = await getActivePlan();
       await createOrUpdateLatentPlan(plan.plan_json).then(async (latentPlan) => {
         setLatentPlan(latentPlan);
-        console.log("Latent Plan:", latentPlan.weekly_task_pool);
         const todaysTasks = await getOrCreatePreCheckinDailyPlan(
           latentPlan.weekly_task_pool,
         );
-        console.log("Today's Tasks:", todaysTasks);
         setTodaysTasks(todaysTasks.tasks ?? []);
         setAiSummary(todaysTasks.aiSummary ?? "");
       setIsLoading(false);
@@ -59,7 +58,6 @@ export default function Dashboard() {
 
   useFocusEffect(
     useCallback(() => {
-      console.log("Dashboard screen focused, refreshing data...");
       fetchActivePlan();
     }, [])
   );
@@ -93,6 +91,7 @@ export default function Dashboard() {
             completed={completedTasks}
             total={todaysTasks.length}
           />
+          <ScrollView style={{ marginBottom: 75 }}>
           {dailyCheckInComplete && (completedTasks === todaysTasks.length) && (
             <EverythingCompletedTile />
           )}
@@ -108,6 +107,9 @@ export default function Dashboard() {
               setDailyCheckInComplete={setDailyCheckInComplete}
               todaysTasks={latentPlan}
             />
+          )}
+          {(aiSummary && dailyCheckInComplete)  && (
+            <InsightsTile aiSummary={aiSummary} />
           )}
           <TodaysPlan
             aiSummary = {aiSummary}
@@ -129,6 +131,7 @@ export default function Dashboard() {
               setWeeklyReportComplete={setWeeklyReportComplete}
             />
           )}
+          </ScrollView>
         </View>
       </SafeAreaView>
     );
