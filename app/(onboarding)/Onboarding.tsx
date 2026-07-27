@@ -123,7 +123,10 @@ export default function Onboarding() {
   return (
     <SafeAreaView style={[styles.page, { backgroundColor: "#09090B" }]}>
       {showIntro ? (
-        <PulseText onAnimationComplete={() => setShowIntro(false)} />
+        <PulseText
+          onAnimationComplete={() => setShowIntro(false)}
+          route="onboarding"
+        />
       ) : (
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}

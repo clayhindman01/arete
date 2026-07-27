@@ -1,6 +1,6 @@
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { View } from "react-native";
 
 import { useSession } from "@/lib/auth";
 import { getProfile } from "@/lib/db";
@@ -34,7 +34,7 @@ export default function Index() {
     loadProfile();
   }, [session]);
 
-  if (loading || profileLoading) {
+  if (loading) {
     return (
       <View
         style={{
@@ -44,7 +44,7 @@ export default function Index() {
           backgroundColor: "#09090B",
         }}
       >
-        <ActivityIndicator size="large" color="white" />
+        {/* <ActivityIndicator size="large" color="whi  te" /> */}
       </View>
     );
   }

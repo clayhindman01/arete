@@ -22,7 +22,7 @@ export default function TodaysPlan({
     <Card>
       <View style={styles.headerContainer}>
         <Text style={[styles.titleText, { color: colors.text }]}>
-          TODAY'S TASKS
+          TODAY'S PLAN
         </Text>
 
         {/* <Text style={[styles.titleSubText]}>{tasks.length} remaining</Text> */}
@@ -105,15 +105,15 @@ const CheckListItem = ({
 
   const handleTaskCompletion = () => {
     if (task?.id && setTodaysTasks) {
-       setTodaysTasks((prev: any) =>
+      setTodaysTasks((prev: any) =>
         prev.map((t: any) =>
           t.id === task.id
             ? {
                 ...t,
                 completed: !t.completed,
               }
-            : t
-        )
+            : t,
+        ),
       );
       toggleTask(task.id, !isChecked);
     }

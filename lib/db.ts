@@ -64,7 +64,7 @@ export async function getActivePlan() {
     .eq("user_id", user.id)
     .eq("active", true)
     .order("version", { ascending: false })
-    // .limit(1)
+    .limit(1)
     .single();
 
   if (error) throw error;
@@ -228,7 +228,6 @@ export async function createOrUpdateLatentPlan(planJson: any) {
 export async function getOrCreatePreCheckinDailyPlan(
   weeklyTaskPool: LatentTask[],
 ) {
-
   const today = getToday();
   const user = await getUser();
 
@@ -258,7 +257,10 @@ export async function getOrCreatePreCheckinDailyPlan(
     .maybeSingle();
 
   if (existingPlan && existingPlan.daily_tasks) {
-    return {tasks: existingPlan.daily_tasks, aiSummary: existingPlan.ai_summary};
+    return {
+      tasks: existingPlan.daily_tasks,
+      aiSummary: existingPlan.ai_summary,
+    };
   }
 
   // 1. Filter tasks for today from latent pool
@@ -302,7 +304,7 @@ export async function getOrCreatePreCheckinDailyPlan(
       selectedTasks.map((t) => ({
         ...t,
         plan_id: plan.id,
-        completed: false
+        completed: false,
       })),
     );
 
@@ -328,9 +330,8 @@ export async function saveAdaptiveDailyPlan(
     summary: string;
     tasks: any[];
   },
-  userId: string
+  userId: string,
 ) {
-
   console.log("saveAdaptiveDailyPlan userId", aiPlan, userId);
 
   // 1. Close current plan
@@ -343,62 +344,47 @@ export async function saveAdaptiveDailyPlan(
     .eq("is_current", true)
     .single();
 
-
   if (currentPlan) {
     await supabase
       .from("daily_plans")
       .update({
-        is_current:false,
+        is_current: false,
       })
       .eq("id", currentPlan.id);
   }
 
-
   // 2. Create new plan version
 
-  const { data:newPlan, error:planError } =
-    await supabase
-      .from("daily_plans")
-      .insert({
-        user_id:userId,
-        is_current:true,
-        ai_summary:aiPlan.summary,
-        plan_date: new Date().toISOString().split("T")[0],
-      })
-      .select()
-      .single();
+  const { data: newPlan, error: planError } = await supabase
+    .from("daily_plans")
+    .insert({
+      user_id: userId,
+      is_current: true,
+      ai_summary: aiPlan.summary,
+      plan_date: new Date().toISOString().split("T")[0],
+    })
+    .select()
+    .single();
 
-
-  if(planError) throw planError;
-
-
+  if (planError) throw planError;
 
   // 3. Insert tasks
 
-  const {error:taskError} =
-    await supabase
-      .from("daily_tasks")
-      .insert(
-        aiPlan.tasks.map(
-          (task,index)=>({
-            plan_id:newPlan.id,
-            title:task.title,
-            description:task.description,
-            estimated_minutes:task.estimated_minutes,
-            completed:task.completed ?? false,
-            completed_at:task.completed
-              ? new Date().toISOString()
-              : null,
-            sort_order:index
-          })
-        )
-      );
+  const { error: taskError } = await supabase.from("daily_tasks").insert(
+    aiPlan.tasks.map((task, index) => ({
+      plan_id: newPlan.id,
+      title: task.title,
+      description: task.description,
+      estimated_minutes: task.estimated_minutes,
+      completed: task.completed ?? false,
+      completed_at: task.completed ? new Date().toISOString() : null,
+      sort_order: index,
+    })),
+  );
 
+  if (taskError) throw taskError;
 
-  if(taskError) throw taskError;
-
-
-  return {tasks: newPlan, aiSummary: aiPlan.summary};
+  return { tasks: newPlan, aiSummary: aiPlan.summary };
 }
 
 export async function hasCompletedDailyCheckInToday() {

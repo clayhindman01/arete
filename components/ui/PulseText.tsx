@@ -4,17 +4,24 @@ import { Animated, StyleSheet, View } from "react-native";
 
 type PulseTextProps = {
   onAnimationComplete?: () => void;
+  route?: "onboarding" | "home";
 };
 
-const phases = [
-  `Arete: Excellence through Action`,
-  "Become who you want to be through consistent action.",
-];
-
-export default function PulseText({ onAnimationComplete }: PulseTextProps) {
+export default function PulseText({
+  onAnimationComplete,
+  route = "home",
+}: PulseTextProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const [phase, setPhase] = useState(0);
   const { colors } = useTheme();
+
+  const phases =
+    route !== "onboarding"
+      ? [`ARETE`]
+      : [
+          `ARETE\n\nEXCELLENCE THROUGH ACTION`,
+          "BECOME WHO YOU WANT THROUGH CONSISTENT ACTION",
+        ];
 
   useEffect(() => {
     let isCancelled = false;
@@ -37,7 +44,7 @@ export default function PulseText({ onAnimationComplete }: PulseTextProps) {
           return;
         }
 
-        if (index === 0) {
+        if (index === 0 && route === "onboarding") {
           opacity.setValue(0);
           setPhase(1);
           startPhase(1);
@@ -73,10 +80,10 @@ const styles = StyleSheet.create({
   },
   text: {
     width: "80%",
-    fontSize: 26,
-    fontWeight: "600",
+    fontSize: 30,
+    fontWeight: "700",
     textAlign: "center",
     lineHeight: 34,
-    letterSpacing: 2,
+    letterSpacing: 5,
   },
 });
