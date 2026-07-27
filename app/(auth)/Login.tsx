@@ -1,5 +1,6 @@
 import Button from "@/components/ui/Button";
 import { signIn } from "@/lib/auth";
+import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -12,15 +13,27 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { ErrorComponent, ErrorType, handleError } from "./util";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<ErrorType | null>(null);
 
   const router = useRouter();
+  const { colors } = useTheme();
 
   const logIn = () => {
-    signIn(email, password).then(() => router.navigate("/(tabs)"));
+    signIn(email, password)
+      .then(() => router.navigate("/(tabs)"))
+      .catch((error) => {
+        setError(
+          handleError({
+            error: error.error,
+            message: error.message,
+          }),
+        );
+      });
   };
 
   return (
@@ -30,50 +43,48 @@ export default function LoginScreen() {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.inner}>
-          <View style={styles.card}>
-            <Text style={styles.title}>Arete</Text>
-            <Text style={styles.subtitle}>
-              Small Commitments. Sustained Growth.
-            </Text>
+          <Text style={styles.title}>ARETE</Text>
+          <Text style={styles.subtitle}>
+            Small Commitments. Sustained Growth.
+          </Text>
 
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Email"
-              placeholderTextColor="#64748b"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email"
+            placeholderTextColor="#64748b"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
 
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Password"
-              placeholderTextColor="#64748b"
-              secureTextEntry
-            />
+          <TextInput
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password"
+            placeholderTextColor="#64748b"
+            secureTextEntry
+          />
 
-            <Button label="Log In" type="primary" onPress={() => logIn()} />
+          {error && <ErrorComponent label={error.message} />}
 
-            <View style={styles.dividerRow}>
-              <View style={styles.line} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.line} />
-            </View>
-
-            {/* <Button label="Continue with Google" type="secondary" /> */}
-            <Button
-              label="Create New Account"
-              type="secondary"
-              onPress={() => router.navigate("/(auth)/Signup")}
-            />
-
-            <Text style={styles.footer}>
-              By continuing you agree to Arete Terms & Privacy Policy
-            </Text>
+          <Button type="primary" onPress={logIn} label="Log In" />
+          <View style={styles.dividerRow}>
+            <View style={styles.line} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.line} />
           </View>
+
+          <Button
+            label="Create New Account"
+            type="secondary"
+            onPress={() => router.navigate("/(auth)/Signup")}
+          />
+
+          <Text style={styles.footer}>
+            By continuing you agree to Arete Terms & Privacy Policy
+          </Text>
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
@@ -97,9 +108,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "600",
-    color: "#fff",
+    color: "#ebc27b",
     textAlign: "center",
     marginBottom: 6,
+    letterSpacing: 5,
+    lineHeight: 50,
   },
   subtitle: {
     fontSize: 14,
@@ -120,6 +133,7 @@ const styles = StyleSheet.create({
     padding: 12,
     color: "#fff",
     marginBottom: 14,
+    letterSpacing: 1,
   },
   primaryButton: {
     backgroundColor: "#3b82f6",

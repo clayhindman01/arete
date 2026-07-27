@@ -19,7 +19,10 @@ export default function DailyCheckInTile({
   const handlePress = () => {
     router.push({
       pathname: "/(tabs)/CheckIn",
-      params: { todaysTasks: JSON.stringify(todaysTasks), isDailyCheckInComplete: dailyCheckInComplete? "true" : "false",  },
+      params: {
+        todaysTasks: JSON.stringify(todaysTasks),
+        isDailyCheckInComplete: dailyCheckInComplete ? "true" : "false",
+      },
     });
     setDailyCheckInComplete(true);
   };

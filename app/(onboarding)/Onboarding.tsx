@@ -110,7 +110,6 @@ export default function Onboarding() {
   const handleComplete = () => {
     if (profile && planData) {
       // Update profile to mark onboarding complete
-      console.log("profile.id", profile.id);
       saveGeneratedPlan(profile.id, planData).then(() => {
         completeOnboarding().then(async () => {
           await refreshProfile();
@@ -150,7 +149,7 @@ export default function Onboarding() {
 
             {currentStep === 2 && (
               <View>
-                <Text style={styles.stepTitle}>What's your goal?</Text>
+                <Text style={styles.stepTitle}>WHAT IS YOUR GOAL?</Text>
                 <TextField
                   placeholder="Describe your goal"
                   value={formData.goal}
@@ -165,7 +164,9 @@ export default function Onboarding() {
 
             {currentStep === 3 && (
               <View>
-                <Text style={styles.stepTitle}>Timeline for your goal?</Text>
+                <Text style={styles.stepTitle}>
+                  WHEN DO YOU WANT TO ACHIEVE YOUR GOAL?
+                </Text>
                 <ButtonGroup
                   options={GOAL_TIMELINE_OPTIONS}
                   value={formData.goalTimeline}
@@ -182,7 +183,11 @@ export default function Onboarding() {
 
             {currentStep === 4 && (
               <View>
-                <Text style={styles.stepTitle}>Where are you starting?</Text>
+                <Text style={styles.stepTitle}>WHERE ARE YOU STARTING AT?</Text>
+                <Text style={styles.subText}>
+                  (The more details you include the more accurate your plan will
+                  be)
+                </Text>
                 <TextField
                   placeholder="Describe your current situation"
                   value={formData.startingPoint}
@@ -199,7 +204,7 @@ export default function Onboarding() {
             {currentStep === 5 && (
               <View>
                 <Text style={styles.stepTitle}>
-                  How much time daily can you commit?
+                  HOW MUCH TIME DAILY DO YOU HAVE AVAILABLE?
                 </Text>
                 <ButtonGroup
                   options={AVAILABLE_TIME_OPTIONS}
@@ -218,8 +223,10 @@ export default function Onboarding() {
             {currentStep === 6 &&
               (planData ? (
                 <View>
-                  <Text style={styles.stepTitle}>
-                    Modify the plan to fit your life
+                  <Text style={styles.stepTitle}>ARETE'S PLAN</Text>
+                  <Text style={styles.goalText}>{planData.goal.title}</Text>
+                  <Text style={styles.subText}>
+                    {planData.goal.description}
                   </Text>
                   {planData?.commitments.map((commitment, index) => (
                     <PlanComponent key={index} commitment={commitment} />
@@ -272,15 +279,22 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
   },
   stepTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 600,
     letterSpacing: 1,
     textAlign: "center",
     color: "#ecedee",
     marginBottom: 24,
   },
+  goalText: {
+    fontSize: 16,
+    textAlign: "center",
+    color: "#ecedee",
+    fontWeight: "600",
+    marginBottom: 24,
+  },
   subText: {
-    fontSize: 18,
+    fontSize: 14,
     textAlign: "center",
     color: "#ecedee",
     marginBottom: 24,
