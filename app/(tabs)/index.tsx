@@ -38,17 +38,14 @@ export default function Dashboard() {
     try {
       const plan = await getActivePlan();
       setGoal(plan?.goal ?? null);
-      await createOrUpdateLatentPlan(plan.plan_json).then(
-        async (latentPlan) => {
-          setLatentPlan(latentPlan);
-          const todaysTasks = await getOrCreatePreCheckinDailyPlan(
-            latentPlan.weekly_task_pool,
-          );
-          setTodaysTasks(todaysTasks.tasks ?? []);
-          setAiSummary(todaysTasks.aiSummary ?? "");
-          // setIsLoading(false);
-        },
+      const latentPlan = await createOrUpdateLatentPlan(plan.plan_json);
+      setLatentPlan(latentPlan);
+      const todaysTasks = await getOrCreatePreCheckinDailyPlan(
+        latentPlan.weekly_task_pool,
       );
+      setTodaysTasks(todaysTasks.tasks ?? []);
+      setAiSummary(todaysTasks.aiSummary ?? "");
+      // setIsLoading(false);
     } catch (error) {
       console.error("Error fetching active plan:", error);
     }
