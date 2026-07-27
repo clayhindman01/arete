@@ -38,15 +38,17 @@ export default function Button({
 
 const styles = StyleSheet.create({
   primaryButton: {
-    backgroundColor: "rgb(103, 189, 122)",
+    backgroundColor: "#b89b5e",
     padding: 14,
     borderRadius: 10,
     alignItems: "center",
   },
   primaryButtonText: {
-    color: "#fff",
+    color: "#000",
+    fontSize: 16,
     fontWeight: "600",
     letterSpacing: 1,
+    lineHeight: 25,
   },
   secondaryButton: {
     borderWidth: 1,
@@ -57,7 +59,9 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: "#e2e8f0",
-    fontWeight: 600,
+    fontSize: 16,
+    fontWeight: "600",
     letterSpacing: 1,
+    lineHeight: 25,
   },
 });

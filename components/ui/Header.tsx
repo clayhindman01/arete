@@ -23,6 +23,7 @@ export default function Header() {
             lineHeight: 36,
             fontWeight: "bold",
             fontSize: 28,
+            // color: "#ebc27b",
             color: "#A1A1AA",
             letterSpacing: 8,
             textAlign: "center",

@@ -12,13 +12,25 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { ErrorComponent, ErrorType, handleError } from "./util";
 
 export default function SignupScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [error, setError] = useState<ErrorType | null>(null);
   const router = useRouter();
 
   const handleSignUp = () => {
+    if (password != confirmPassword) {
+      setError(
+        handleError({
+          error: "sign up error",
+          message: "Passwords do not match.",
+        }),
+      );
+    }
     signUp(email, password).then(() =>
       router.navigate("/(onboarding)/Onboarding"),
     );
@@ -31,49 +43,47 @@ export default function SignupScreen() {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.inner}>
-          <View style={styles.card}>
-            <Text style={styles.title}>Arete</Text>
-            <Text style={styles.subtitle}>Create your account</Text>
+          <Text style={styles.subtitle}>Create your account</Text>
 
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="you@example.com"
-              placeholderTextColor="#64748b"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email"
+            placeholderTextColor="#64748b"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
 
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="••••••••"
-              placeholderTextColor="#64748b"
-              secureTextEntry
-            />
+          <TextInput
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password"
+            placeholderTextColor="#64748b"
+            secureTextEntry
+          />
 
-            <Button
-              label="Create Account"
-              type="primary"
-              onPress={() => handleSignUp()}
-            />
+          <TextInput
+            style={styles.input}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            placeholder="Confirm Password"
+            placeholderTextColor="#64748b"
+            secureTextEntry
+          />
 
-            {/* <View style={styles.dividerRow}>
-              <View style={styles.line} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.line} />
-            </View> */}
+          {error && <ErrorComponent label={error.message} />}
 
-            {/* <Button label="Sign up with Google" type="secondary" /> */}
+          <Button
+            label="Create Account"
+            type="primary"
+            onPress={() => handleSignUp()}
+          />
 
-            <Text style={styles.footer}>
-              By creating an account you agree to Arete Terms & Privacy Policy
-            </Text>
-          </View>
+          <Text style={styles.footer}>
+            By creating an account you agree to Arete Terms & Privacy Policy
+          </Text>
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
@@ -90,13 +100,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 20,
   },
-  card: {
-    backgroundColor: "#0f172a",
-    borderRadius: 16,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.2)",
-  },
   title: {
     fontSize: 32,
     fontWeight: "600",
@@ -105,10 +108,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 24,
     color: "#94a3b8",
     textAlign: "center",
     marginBottom: 20,
+    fontWeight: "600",
+    letterSpacing: 2,
   },
   label: {
     fontSize: 13,
@@ -123,6 +128,7 @@ const styles = StyleSheet.create({
     padding: 12,
     color: "#fff",
     marginBottom: 14,
+    letterSpacing: 1,
   },
   dividerRow: {
     flexDirection: "row",

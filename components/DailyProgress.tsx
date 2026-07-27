@@ -72,6 +72,6 @@ const styles = StyleSheet.create({
   fill: {
     height: "100%",
     borderRadius: 999,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#b89b5e",
   },
 });

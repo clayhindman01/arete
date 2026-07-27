@@ -24,6 +24,7 @@ export default function TextField({
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor="#64748b"
+        numberOfLines={5}
         keyboardType={keyboardType}
       />
       {error && <Text style={styles.errorText}>{error}</Text>}
@@ -43,6 +44,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     color: "#ecedee",
     fontSize: 16,
+    letterSpacing: 1,
   },
   inputError: {
     borderColor: "#ff6b6b",

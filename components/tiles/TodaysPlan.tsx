@@ -139,6 +139,7 @@ const CheckListItem = ({
             fontWeight: 600,
             color: isChecked ? "#A1A1AA" : colors.text,
             textDecorationLine: isChecked ? "line-through" : "none",
+            textDecorationColor: "#b89b5e",
             letterSpacing: 1,
           })}
         {description &&
@@ -146,6 +147,7 @@ const CheckListItem = ({
             fontSize: 12,
             color: isChecked ? "#A1A1AA" : colors.text,
             textDecorationLine: isChecked ? "line-through" : "none",
+            textDecorationColor: "#b89b5e",
             letterSpacing: 1,
           })}
         {task?.estimated_minutes != null &&
@@ -154,6 +156,7 @@ const CheckListItem = ({
             fontWeight: 600,
             color: isChecked ? "#A1A1AA" : colors.text,
             textDecorationLine: isChecked ? "line-through" : "none",
+            textDecorationColor: "#b89b5e",
             letterSpacing: 1,
           })}
       </View>
@@ -190,8 +193,6 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     height: 20,
     width: 20,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "lightgray",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -201,6 +202,6 @@ const styles = StyleSheet.create({
     borderColor: "lightgray",
   },
   complete: {
-    backgroundColor: "#A1A1AA",
+    backgroundColor: "#b89b5e",
   },
 });

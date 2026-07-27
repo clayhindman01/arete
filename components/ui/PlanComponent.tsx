@@ -1,11 +1,7 @@
-import {
-  Commitments,
-  DaysOfWeek
-} from "@/types/PlanGeneration";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { Commitments, DaysOfWeek } from "@/types/PlanGeneration";
 import { useTheme } from "@react-navigation/native";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 export default function PlanComponent({
   commitment,
@@ -54,17 +50,24 @@ export default function PlanComponent({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titleText}>{commitment.title}</Text>
+      {/* <Text style={styles.titleText}>Goal: {commitment.title}</Text> */}
       {commitment.routines.map((routine, index) => (
         <View key={index}>
           {routine.tasks.map((task, i) => (
             <View key={`${index}${i}`}>
-              <CheckListItem  title={task.title} description={task.description} task={task}>
-                <Text style={{  fontSize: 12,
-                  fontWeight: 600,
-                  color:  colors.text,
-                  letterSpacing: 1, 
-                }}>
+              <CheckListItem
+                title={task.title}
+                description={task.description}
+                task={task}
+              >
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: colors.text,
+                    letterSpacing: 1,
+                  }}
+                >
                   Frequency:{" "}
                   {routine.frequency === "daily"
                     ? "Daily"
@@ -106,17 +109,8 @@ const CheckListItem = ({
   };
 
   return (
-    <Pressable
-      onPress={() => setIsChecked(!isChecked)}
-      style={styles.checkListItem}
-    >
-      <View
-        style={[styles.circle, isChecked ? styles.complete : styles.incomplete]}
-      >
-        {isChecked && (
-          <MaterialCommunityIcons name="check" color="black" size={14} />
-        )}
-      </View>
+    <View style={styles.checkListItem}>
+      <View style={[styles.circle]}></View>
       <View style={{ paddingHorizontal: 10 }}>
         {title && (
           <Text
@@ -134,7 +128,7 @@ const CheckListItem = ({
           <Text
             style={{
               fontSize: 12,
-              color: isChecked ? colors.text: "#A1A1AA",
+              color: isChecked ? colors.text : "#A1A1AA",
               letterSpacing: 1,
             }}
           >
@@ -155,13 +149,13 @@ const CheckListItem = ({
         )}
         {children}
       </View>
-    </Pressable>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 10,
+    // padding: 10,
   },
   titleText: {
     fontSize: 20,
@@ -189,13 +183,12 @@ const styles = StyleSheet.create({
   },
   circle: {
     borderRadius: 100,
-    height: 20,
-    width: 20,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "lightgray",
+    height: 10,
+    width: 10,
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#b89b5e",
   },
   incomplete: {
     borderWidth: StyleSheet.hairlineWidth,
