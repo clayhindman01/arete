@@ -13,7 +13,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { ErrorComponent, ErrorType, handleError } from "./util";
+import { ErrorComponent, ErrorType, handleError } from "../../lib/auth.util";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
