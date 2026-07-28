@@ -84,7 +84,8 @@ const CheckListItem = ({
   task?: any;
 }) => {
   const { colors } = useTheme();
-  const [isChecked, setIsChecked] = useState(defaultChecked);
+  const [isChecked, setIsChecked] = useState<boolean>(defaultChecked);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const renderTextContent = (value: unknown, textStyle: object) => {
     if (value == null || value === "") {
@@ -121,46 +122,77 @@ const CheckListItem = ({
   };
 
   return (
-    <Pressable
-      onPress={() => (task ? handleTaskCompletion() : setIsChecked(!isChecked))}
-      style={styles.checkListItem}
-    >
-      <View
-        style={[styles.circle, isChecked ? styles.complete : styles.incomplete]}
-      >
-        {isChecked && (
-          <MaterialCommunityIcons name="check" color="black" size={14} />
-        )}
+    <View>
+      <View style={styles.checkListItem}>
+        <Pressable
+          onPress={() =>
+            task ? handleTaskCompletion() : setIsChecked(!isChecked)
+          }
+          style={[
+            styles.circle,
+            isChecked ? styles.complete : styles.incomplete,
+          ]}
+        >
+          {isChecked && (
+            <MaterialCommunityIcons name="check" color="black" size={14} />
+          )}
+        </Pressable>
+        <Pressable
+          onPress={() => setIsExpanded(!isExpanded)}
+          style={{ paddingHorizontal: 10 }}
+        >
+          {title &&
+            renderTextContent(title, {
+              fontSize: 16,
+              fontWeight: 600,
+              color: isChecked ? "#A1A1AA" : colors.text,
+              textDecorationLine: isChecked ? "line-through" : "none",
+              textDecorationColor: "#b89b5e",
+              letterSpacing: 2,
+            })}
+        </Pressable>
+        <Pressable onPress={() => setIsExpanded(!isExpanded)}>
+          <MaterialCommunityIcons
+            name={isExpanded ? "chevron-up" : "chevron-down"}
+            color={colors.text}
+            size={30}
+          />
+        </Pressable>
       </View>
-      <View style={{ paddingHorizontal: 10 }}>
-        {title &&
-          renderTextContent(title, {
-            fontSize: 14,
-            fontWeight: 600,
-            color: isChecked ? "#A1A1AA" : colors.text,
-            textDecorationLine: isChecked ? "line-through" : "none",
-            textDecorationColor: "#b89b5e",
-            letterSpacing: 1,
-          })}
-        {description &&
-          renderTextContent(description, {
-            fontSize: 12,
-            color: isChecked ? "#A1A1AA" : colors.text,
-            textDecorationLine: isChecked ? "line-through" : "none",
-            textDecorationColor: "#b89b5e",
-            letterSpacing: 1,
-          })}
-        {task?.estimated_minutes != null &&
-          renderTextContent(formatTime(task.estimated_minutes), {
-            fontSize: 12,
-            fontWeight: 600,
-            color: isChecked ? "#A1A1AA" : colors.text,
-            textDecorationLine: isChecked ? "line-through" : "none",
-            textDecorationColor: "#b89b5e",
-            letterSpacing: 1,
-          })}
-      </View>
-    </Pressable>
+      {isExpanded && (
+        <View
+          style={{
+            width: "100%",
+            paddingHorizontal: 30,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {description &&
+            renderTextContent(description, {
+              fontSize: 12,
+              color: isChecked ? "#A1A1AA" : colors.text,
+              textDecorationLine: isChecked ? "line-through" : "none",
+              textDecorationColor: "#b89b5e",
+              letterSpacing: 1,
+              textAlign: "center",
+            })}
+          {task?.estimated_minutes != null &&
+            renderTextContent(
+              `Estimated Time: ${formatTime(task.estimated_minutes)}`,
+              {
+                fontSize: 12,
+                fontWeight: 600,
+                color: isChecked ? "#A1A1AA" : colors.text,
+                textDecorationLine: isChecked ? "line-through" : "none",
+                textDecorationColor: "#b89b5e",
+                letterSpacing: 1,
+                paddingVertical: 5,
+              },
+            )}
+        </View>
+      )}
+    </View>
   );
 };
 
@@ -188,6 +220,7 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   circle: {
     borderRadius: 100,

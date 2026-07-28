@@ -5,6 +5,7 @@ import EverythingCompletedTile from "@/components/tiles/EverythingCompletedTile"
 import InsightsTile from "@/components/tiles/InsightsTile";
 import TodaysPlan from "@/components/tiles/TodaysPlan";
 import WeeklyReportTile from "@/components/tiles/WeeklyReportTile";
+import Card from "@/components/ui/Card";
 import Header from "@/components/ui/Header";
 import PulseText from "@/components/ui/PulseText";
 import { getCurrentUser } from "@/lib/auth";
@@ -79,24 +80,27 @@ export default function Dashboard() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
         <Header />
-        <Text
-          style={{
-            color: "#A1A1AA",
-            fontSize: 16,
-            fontWeight: 500,
-            textAlign: "center",
-            paddingBottom: 5,
-            letterSpacing: 1,
-          }}
-        >
-          {goal}
-        </Text>
+
         <View style={{ padding: 5, paddingVertical: 10 }}>
           <DailyProgress
             completed={completedTasks}
             total={todaysTasks.length}
           />
           <ScrollView style={{ marginBottom: 75 }}>
+            <Card>
+              <Text
+                style={{
+                  color: "#A1A1AA",
+                  fontSize: 16,
+                  fontWeight: 500,
+                  textAlign: "center",
+                  paddingBottom: 5,
+                  letterSpacing: 2,
+                }}
+              >
+                Goal: {goal}.
+              </Text>
+            </Card>
             {dailyCheckInComplete && completedTasks === todaysTasks.length && (
               <EverythingCompletedTile />
             )}
