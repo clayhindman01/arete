@@ -462,3 +462,15 @@ export async function createDailyCheckIn(checkIn: CheckInValue) {
 
   return data;
 }
+
+export async function getCalendar(date: Date) {
+  const user = await getUser();
+  const { data, error } = await supabase.rpc("get_month_calendar", {
+    p_user_id: user.id,
+    p_month: date,
+  });
+
+  if (error) throw error;
+
+  return data;
+}

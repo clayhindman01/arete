@@ -13,7 +13,9 @@ export default function EverythingCompletedTile() {
         />
         <View style={{ paddingLeft: 10 }}>
           <Text style={styles.titleText}>TODAY COMPLETE</Text>
-          <Text style={styles.subText}>Well done finishing all tasks!</Text>
+          <Text style={styles.subText}>
+            You're making progress towards your goal!
+          </Text>
         </View>
       </View>
     </Card>
@@ -27,7 +29,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   titleText: {
-    fontSize: 16,
+    fontSize: 14,
     letterSpacing: 2,
     fontWeight: 600,
     color: "#F5F5F5",
@@ -36,6 +38,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#A1A1AA",
     letterSpacing: 1,
-    paddingVertical: 5
+    width: "90%",
+    paddingVertical: 5,
   },
 });

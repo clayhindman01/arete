@@ -1,7 +1,8 @@
 import { toggleTask } from "@/lib/db";
+import { Tasks } from "@/types/PlanGeneration";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
-import { useState } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Card from "../ui/Card";
 
@@ -10,11 +11,13 @@ export default function TodaysPlan({
   todaysTasks,
   setTodaysTasks,
   aiSummary,
+  onTaskToggle,
 }: {
   dailyCheckInComplete: boolean;
-  todaysTasks: any;
-  setTodaysTasks: (tasks: any) => void;
+  todaysTasks: Tasks[];
+  setTodaysTasks: Dispatch<SetStateAction<Tasks[]>>;
   aiSummary: string;
+  onTaskToggle?: (task: Tasks, nextValue: boolean) => void;
 }) {
   const { colors } = useTheme();
 
@@ -63,6 +66,7 @@ export default function TodaysPlan({
             defaultChecked={task.completed}
             task={task}
             setTodaysTasks={setTodaysTasks}
+            onTaskToggle={onTaskToggle}
           />
         </View>
       ))}
@@ -76,12 +80,14 @@ const CheckListItem = ({
   description,
   setTodaysTasks,
   task,
+  onTaskToggle,
 }: {
   title?: string;
   defaultChecked?: boolean;
   description?: string;
-  setTodaysTasks?: (tasks: any) => void;
-  task?: any;
+  setTodaysTasks?: Dispatch<SetStateAction<Tasks[]>>;
+  task?: Tasks;
+  onTaskToggle?: (task: Tasks, nextValue: boolean) => void;
 }) => {
   const { colors } = useTheme();
   const [isChecked, setIsChecked] = useState<boolean>(defaultChecked);
@@ -104,21 +110,37 @@ const CheckListItem = ({
     return `${hours}h ${mins}m`;
   };
 
-  const handleTaskCompletion = () => {
-    if (task?.id && setTodaysTasks) {
-      setTodaysTasks((prev: any) =>
-        prev.map((t: any) =>
+  const handleTaskCompletion = async () => {
+    const nextValue = !isChecked;
+
+    if (!task) {
+      setIsChecked(nextValue);
+      return;
+    }
+
+    if (task.id && setTodaysTasks) {
+      setTodaysTasks((prev: Tasks[]) =>
+        prev.map((t: Tasks) =>
           t.id === task.id
             ? {
                 ...t,
-                completed: !t.completed,
+                completed: nextValue,
               }
             : t,
         ),
       );
-      toggleTask(task.id, !isChecked);
     }
-    setIsChecked(!isChecked);
+
+    try {
+      if (task.id) {
+        await toggleTask(task.id, nextValue);
+      }
+      onTaskToggle?.(task, nextValue);
+    } catch (error) {
+      console.error("Failed to toggle task", error);
+    }
+
+    setIsChecked(nextValue);
   };
 
   return (
@@ -126,7 +148,7 @@ const CheckListItem = ({
       <View style={styles.checkListItem}>
         <Pressable
           onPress={() =>
-            task ? handleTaskCompletion() : setIsChecked(!isChecked)
+            task ? void handleTaskCompletion() : setIsChecked(!isChecked)
           }
           style={[
             styles.circle,
@@ -144,11 +166,10 @@ const CheckListItem = ({
           {title &&
             renderTextContent(title, {
               fontSize: 16,
-              fontWeight: 600,
               color: isChecked ? "#A1A1AA" : colors.text,
               textDecorationLine: isChecked ? "line-through" : "none",
               textDecorationColor: "#b89b5e",
-              letterSpacing: 2,
+              letterSpacing: 1.5,
             })}
         </Pressable>
         <Pressable onPress={() => setIsExpanded(!isExpanded)}>

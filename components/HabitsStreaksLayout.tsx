@@ -1,8 +1,13 @@
 import { View } from "react-native";
 import HabitTile from "./tiles/HabitTile";
-import StreakTile from "./tiles/StreakTile";
 
-export default function HabitsStreaksLayout() {
+export default function HabitsStreaksLayout({
+  refreshKey,
+  statusOverrides,
+}: {
+  refreshKey?: number;
+  statusOverrides?: Record<string, string>;
+}) {
   return (
     <View
       style={{
@@ -12,8 +17,8 @@ export default function HabitsStreaksLayout() {
         justifyContent: "space-between",
       }}
     >
-      <HabitTile />
-      <StreakTile />
+      <HabitTile refreshKey={refreshKey} statusOverrides={statusOverrides} />
+      {/* <StreakTile /> */}
     </View>
   );
 }
