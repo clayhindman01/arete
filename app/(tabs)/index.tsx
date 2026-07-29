@@ -83,6 +83,9 @@ export default function Dashboard() {
           // setIsLoading(false);
         },
       );
+      setTodaysTasks(todaysTasks.tasks ?? []);
+      setAiSummary(todaysTasks.aiSummary ?? "");
+      // setIsLoading(false);
     } catch (error) {
       console.error("Error fetching active plan:", error);
     }
