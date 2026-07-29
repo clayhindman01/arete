@@ -144,11 +144,10 @@ const CheckListItem = ({
           {title &&
             renderTextContent(title, {
               fontSize: 16,
-              fontWeight: 600,
               color: isChecked ? "#A1A1AA" : colors.text,
               textDecorationLine: isChecked ? "line-through" : "none",
               textDecorationColor: "#b89b5e",
-              letterSpacing: 2,
+              letterSpacing: 1.5,
             })}
         </Pressable>
         <Pressable onPress={() => setIsExpanded(!isExpanded)}>

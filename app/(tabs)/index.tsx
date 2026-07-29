@@ -120,7 +120,6 @@ export default function Dashboard() {
                 todaysTasks={latentPlan}
               />
             )}
-            <HabitsStreaksLayout />
             {aiSummary && dailyCheckInComplete && (
               <InsightsTile aiSummary={aiSummary} />
             )}
@@ -130,6 +129,7 @@ export default function Dashboard() {
               todaysTasks={todaysTasks}
               setTodaysTasks={setTodaysTasks}
             />
+            <HabitsStreaksLayout />
             {dailyCheckInComplete && (
               <DailyCheckInTile
                 dailyCheckInComplete={dailyCheckInComplete}
