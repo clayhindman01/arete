@@ -1,72 +1,86 @@
 import { useTheme } from "@react-navigation/native";
-import React, { useEffect, useRef, useState } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, Image, StyleSheet, View } from "react-native";
 
 type PulseTextProps = {
   onAnimationComplete?: () => void;
   route?: "onboarding" | "home";
 };
 
-export default function PulseText({
-  onAnimationComplete,
-  route = "home",
-}: PulseTextProps) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const [phase, setPhase] = useState(0);
+export default function PulseText({ onAnimationComplete }: PulseTextProps) {
   const { colors } = useTheme();
-
-  const phases =
-    route !== "onboarding"
-      ? [`ARETE`]
-      : [
-          `ARETE\n\nEXCELLENCE THROUGH ACTION`,
-          "BECOME WHO YOU WANT THROUGH CONSISTENT ACTION",
-        ];
+  const fade = useRef(new Animated.Value(1)).current;
+  const logoOffsetX = useRef(new Animated.Value(0)).current;
+  const textOffsetX = useRef(new Animated.Value(60)).current;
+  const textOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     let isCancelled = false;
 
-    const startPhase = (index: number) => {
-      Animated.sequence([
-        Animated.timing(opacity, {
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(textOpacity, {
           toValue: 1,
-          duration: 2000,
+          duration: 700,
           useNativeDriver: true,
         }),
-        Animated.delay(1400),
-        Animated.timing(opacity, {
+        Animated.timing(textOffsetX, {
           toValue: 0,
-          duration: 800,
+          duration: 700,
           useNativeDriver: true,
         }),
-      ]).start(({ finished }) => {
-        if (!finished || isCancelled) {
-          return;
-        }
+        Animated.timing(logoOffsetX, {
+          toValue: -24,
+          duration: 700,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.delay(1200),
+      Animated.timing(fade, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (!finished || isCancelled) {
+        return;
+      }
 
-        if (index === 0 && route === "onboarding") {
-          opacity.setValue(0);
-          setPhase(1);
-          startPhase(1);
-          return;
-        }
-
-        onAnimationComplete?.();
-      });
-    };
-
-    startPhase(0);
+      onAnimationComplete?.();
+    });
 
     return () => {
       isCancelled = true;
     };
-  }, [onAnimationComplete, opacity]);
+  }, [fade, logoOffsetX, onAnimationComplete, textOffsetX, textOpacity]);
 
   return (
     <View style={styles.container}>
-      <Animated.Text style={[styles.text, { opacity, color: colors.text }]}>
-        {phases[phase]}
-      </Animated.Text>
+      <Animated.View style={[styles.logoRow, { opacity: fade }]}>
+        <Animated.View
+          style={[
+            styles.logoWrap,
+            { transform: [{ translateX: logoOffsetX }] },
+          ]}
+        >
+          <Image
+            source={require("@/assets/images/logo.png")}
+            style={styles.logo}
+          />
+        </Animated.View>
+        <Animated.Text
+          style={[
+            styles.text,
+            {
+              opacity: textOpacity,
+              color: colors.text,
+              transform: [{ translateX: textOffsetX }],
+            },
+          ]}
+        >
+          RETE
+        </Animated.Text>
+      </Animated.View>
     </View>
   );
 }
@@ -76,14 +90,26 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    // width: "80%",
+  },
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    // minWidth: 220,
+  },
+  logoWrap: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  logo: {
+    width: 75,
+    height: 75,
+    // resizeMode: "contain",
   },
   text: {
-    width: "80%",
-    fontSize: 30,
+    fontSize: 56,
     fontWeight: "700",
-    textAlign: "center",
-    lineHeight: 34,
-    letterSpacing: 5,
+    letterSpacing: 12,
+    marginLeft: 8,
   },
 });

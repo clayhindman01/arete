@@ -2,7 +2,6 @@ import DailyProgress from "@/components/DailyProgress";
 import HabitsStreaksLayout from "@/components/HabitsStreaksLayout";
 import DailyCheckInTile from "@/components/tiles/DailyCheckInTile";
 import EverythingCompletedTile from "@/components/tiles/EverythingCompletedTile";
-import InsightsTile from "@/components/tiles/InsightsTile";
 import TodaysPlan from "@/components/tiles/TodaysPlan";
 import WeeklyReportTile from "@/components/tiles/WeeklyReportTile";
 import Card from "@/components/ui/Card";
@@ -183,9 +182,9 @@ export default function Dashboard() {
                 setCalendarRefreshKey((value) => value + 1);
               }}
             />
-            {aiSummary && dailyCheckInComplete && (
+            {/* {aiSummary && dailyCheckInComplete && (
               <InsightsTile aiSummary={aiSummary} />
-            )}
+            )} */}
 
             {dailyCheckInComplete && (
               <DailyCheckInTile
