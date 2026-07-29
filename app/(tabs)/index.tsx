@@ -116,13 +116,12 @@ export default function Dashboard() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
         <Header />
-
-        <View style={{ padding: 5, paddingVertical: 10 }}>
-          <DailyProgress
-            completed={completedTasks}
-            total={todaysTasks.length}
-          />
-          <ScrollView style={{ marginBottom: 75 }}>
+        <DailyProgress completed={completedTasks} total={todaysTasks.length} />
+        <ScrollView style={{ marginBottom: -35 }}>
+          <View style={{ padding: 5, paddingVertical: 10, marginBottom: 15 }}>
+            {dailyCheckInComplete && completedTasks === todaysTasks.length && (
+              <EverythingCompletedTile />
+            )}
             <Card>
               <Text
                 style={{
@@ -137,9 +136,11 @@ export default function Dashboard() {
                 Goal: {goal}.
               </Text>
             </Card>
-            {dailyCheckInComplete && completedTasks === todaysTasks.length && (
-              <EverythingCompletedTile />
-            )}
+
+            <HabitsStreaksLayout
+              refreshKey={calendarRefreshKey}
+              statusOverrides={calendarStatusOverrides}
+            />
             {isWeeklyReportAvailable && !weeklyReportComplete && (
               <WeeklyReportTile
                 weeklyReportComplete={weeklyReportComplete}
@@ -153,9 +154,7 @@ export default function Dashboard() {
                 todaysTasks={latentPlan}
               />
             )}
-            {aiSummary && dailyCheckInComplete && (
-              <InsightsTile aiSummary={aiSummary} />
-            )}
+
             <TodaysPlan
               aiSummary={aiSummary}
               dailyCheckInComplete={dailyCheckInComplete}
@@ -181,10 +180,10 @@ export default function Dashboard() {
                 setCalendarRefreshKey((value) => value + 1);
               }}
             />
-            <HabitsStreaksLayout
-              refreshKey={calendarRefreshKey}
-              statusOverrides={calendarStatusOverrides}
-            />
+            {aiSummary && dailyCheckInComplete && (
+              <InsightsTile aiSummary={aiSummary} />
+            )}
+
             {dailyCheckInComplete && (
               <DailyCheckInTile
                 dailyCheckInComplete={dailyCheckInComplete}
@@ -198,8 +197,9 @@ export default function Dashboard() {
                 setWeeklyReportComplete={setWeeklyReportComplete}
               />
             )}
-          </ScrollView>
-        </View>
+            {/* </ScrollView> */}
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   } else {
