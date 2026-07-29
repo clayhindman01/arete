@@ -34,6 +34,28 @@ export default function Dashboard() {
 
   const [latentPlan, setLatentPlan] = useState<any | null>(null);
   const [goal, setGoal] = useState<string | null>(null);
+  const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
+  const [calendarStatusOverrides, setCalendarStatusOverrides] = useState<
+    Record<string, string>
+  >({});
+
+  const deriveCalendarStatus = (tasks: Tasks[] | null | undefined) => {
+    if (!tasks || tasks.length === 0) {
+      return "none";
+    }
+
+    const completedCount = tasks.filter((task) => task.completed).length;
+
+    if (completedCount === 0) {
+      return "none";
+    }
+
+    if (completedCount === tasks.length) {
+      return "complete";
+    }
+
+    return "partial";
+  };
 
   const fetchActivePlan = async () => {
     try {
@@ -42,11 +64,22 @@ export default function Dashboard() {
       await createOrUpdateLatentPlan(plan.plan_json).then(
         async (latentPlan) => {
           setLatentPlan(latentPlan);
-          const todaysTasks = await getOrCreatePreCheckinDailyPlan(
-            latentPlan.weekly_task_pool,
+          const todaysPlan = await getOrCreatePreCheckinDailyPlan(
+            latentPlan?.weekly_task_pool ?? [],
           );
-          setTodaysTasks(todaysTasks.tasks ?? []);
-          setAiSummary(todaysTasks.aiSummary ?? "");
+          const normalizedTasks: Tasks[] = (todaysPlan?.tasks ?? []).map(
+            (task: any) => ({
+              id: task.id,
+              title: task.title ?? "",
+              description: task.description ?? "",
+              estimated_minutes: task.estimated_minutes ?? 0,
+              one_word_description: task.one_word_description ?? "",
+              completed: Boolean(task.completed),
+            }),
+          );
+
+          setTodaysTasks(normalizedTasks);
+          setAiSummary(todaysPlan?.aiSummary ?? "");
           // setIsLoading(false);
         },
       );
@@ -128,8 +161,30 @@ export default function Dashboard() {
               dailyCheckInComplete={dailyCheckInComplete}
               todaysTasks={todaysTasks}
               setTodaysTasks={setTodaysTasks}
+              onTaskToggle={(task, nextValue) => {
+                setTodaysTasks((previousTasks) => {
+                  const nextTasks = previousTasks.map((currentTask) =>
+                    currentTask.id === task.id
+                      ? { ...currentTask, completed: nextValue }
+                      : currentTask,
+                  );
+
+                  const todayKey = new Date().toISOString().split("T")[0];
+                  setCalendarStatusOverrides((previousOverrides) => ({
+                    ...previousOverrides,
+                    [todayKey]: deriveCalendarStatus(nextTasks),
+                  }));
+
+                  return nextTasks;
+                });
+
+                setCalendarRefreshKey((value) => value + 1);
+              }}
             />
-            <HabitsStreaksLayout />
+            <HabitsStreaksLayout
+              refreshKey={calendarRefreshKey}
+              statusOverrides={calendarStatusOverrides}
+            />
             {dailyCheckInComplete && (
               <DailyCheckInTile
                 dailyCheckInComplete={dailyCheckInComplete}

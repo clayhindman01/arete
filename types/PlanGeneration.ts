@@ -5,11 +5,12 @@ export type Goal = {
 };
 
 export type Tasks = {
+  id?: string;
   title: string;
   description: string;
   estimated_minutes: number;
   one_word_description: string;
-  completed: boolean
+  completed: boolean;
 };
 
 export type DaysOfWeek = "Su" | "M" | "T" | "W" | "Th" | "F" | "S";

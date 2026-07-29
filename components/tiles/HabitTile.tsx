@@ -1,10 +1,23 @@
+import { getCalendar } from "@/lib/db";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import Card from "../ui/Card";
 
-export default function HabitTile() {
+export default function HabitTile({
+  refreshKey,
+  statusOverrides,
+}: {
+  refreshKey?: number;
+  statusOverrides?: Record<string, string>;
+}) {
   const { colors } = useTheme();
 
   const days = ["S", "M", "T", "W", "T", "F", "S"];
@@ -24,6 +37,40 @@ export default function HabitTile() {
   ]);
 
   const [viewDate, setViewDate] = useState(() => new Date());
+  const [calendarData, setCalendarData] = useState<
+    Array<{ day?: string; date?: string; status?: string }>
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeMonthKey, setActiveMonthKey] = useState("");
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  const mergeStatusOverrides = (
+    items: Array<{ day?: string; date?: string; status?: string }>,
+  ) => {
+    if (!statusOverrides || Object.keys(statusOverrides).length === 0) {
+      return items;
+    }
+
+    return items.map((entry) => {
+      const rawDate = entry.day ?? entry.date;
+      const normalizedDate =
+        typeof rawDate === "string"
+          ? rawDate.includes("T")
+            ? rawDate.split("T")[0]
+            : rawDate
+          : "";
+
+      if (!normalizedDate || !statusOverrides[normalizedDate]) {
+        return entry;
+      }
+
+      return {
+        ...entry,
+        status: statusOverrides[normalizedDate],
+      };
+    });
+  };
+
   const month = viewDate.getMonth();
   const year = viewDate.getFullYear();
 
@@ -35,11 +82,38 @@ export default function HabitTile() {
   const totalCells = leadingEmptyDays + daysInMonth;
   const trailingEmptyDays = (7 - (totalCells % 7)) % 7;
 
+  const dayStatusMap = new Map(
+    calendarData.map((entry) => {
+      const rawDate = entry.day ?? entry.date;
+      const normalizedDate =
+        typeof rawDate === "string"
+          ? rawDate.includes("T")
+            ? rawDate.split("T")[0]
+            : rawDate
+          : "";
+      const normalizedStatus =
+        typeof entry.status === "string" ? entry.status.toLowerCase() : "none";
+
+      return [normalizedDate, normalizedStatus];
+    }),
+  );
+
   const calendarDays = Array.from(
     { length: leadingEmptyDays + daysInMonth + trailingEmptyDays },
     (_, index) => {
       const dayNumber = index - leadingEmptyDays + 1;
-      return dayNumber > 0 && dayNumber <= daysInMonth ? dayNumber : null;
+
+      if (dayNumber <= 0 || dayNumber > daysInMonth) {
+        return null;
+      }
+
+      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
+      const status = dayStatusMap.get(dateKey) ?? "none";
+
+      return {
+        day: dayNumber,
+        status,
+      };
     },
   );
 
@@ -61,6 +135,72 @@ export default function HabitTile() {
         new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1),
     );
   };
+
+  useEffect(() => {
+    const monthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
+    const isMonthChange = activeMonthKey !== "" && activeMonthKey !== monthKey;
+
+    if (!isInitialLoad && !isMonthChange) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    let isActive = true;
+
+    const loadCalendar = async () => {
+      try {
+        const res = await getCalendar(firstDayOfMonth);
+        if (isActive) {
+          setCalendarData(mergeStatusOverrides(Array.isArray(res) ? res : []));
+          setIsLoading(false);
+          setActiveMonthKey(monthKey);
+          setIsInitialLoad(false);
+        }
+      } catch (error) {
+        console.error("Failed to load calendar data", error);
+        if (isActive) {
+          setCalendarData([]);
+          setIsLoading(false);
+          setActiveMonthKey(monthKey);
+          setIsInitialLoad(false);
+        }
+      }
+    };
+
+    loadCalendar();
+
+    return () => {
+      isActive = false;
+    };
+  }, [
+    month,
+    year,
+    firstDayOfMonth,
+    isInitialLoad,
+    activeMonthKey,
+    statusOverrides,
+  ]);
+
+  useEffect(() => {
+    if (
+      !refreshKey ||
+      !statusOverrides ||
+      Object.keys(statusOverrides).length === 0
+    ) {
+      return;
+    }
+
+    setCalendarData((previousData) => mergeStatusOverrides(previousData));
+  }, [refreshKey, statusOverrides]);
+
+  if (isLoading && isInitialLoad) {
+    return (
+      <Card style={styles.container}>
+        <ActivityIndicator />
+      </Card>
+    );
+  }
 
   return (
     <Card style={styles.container}>
@@ -85,7 +225,11 @@ export default function HabitTile() {
         {weeks.map((week, weekIndex) => (
           <View style={styles.headerContainer} key={weekIndex}>
             {week.map((day, dayIndex) => (
-              <HabitBox key={`${weekIndex}-${dayIndex}`} day={day} />
+              <HabitBox
+                key={`${weekIndex}-${dayIndex}`}
+                day={day?.day ?? null}
+                status={day?.status}
+              />
             ))}
           </View>
         ))}
@@ -110,29 +254,36 @@ const DayText = ({ day }: { day: string }) => {
 };
 
 const HabitBox = ({
-  completed = false,
   day,
+  status = "none",
 }: {
-  completed?: boolean;
   day?: number | null;
+  status?: string;
 }) => {
   const isVisibleDay = day !== null && day !== undefined;
+  const isComplete = status === "complete";
+  const isPartial = status === "partial";
 
   return (
     <View
       style={[
         styles.habitBox,
-        completed && styles.filledIn,
         isVisibleDay && styles.dayVisible,
+        isVisibleDay && isComplete && styles.complete,
+        isVisibleDay && isPartial && styles.partial,
       ]}
     >
       {isVisibleDay ? (
-        <Text style={styles.dayText}>{day}</Text>
-      ) : (
-        completed && (
-          <MaterialCommunityIcons name="check" color="#111318" size={14} />
-        )
-      )}
+        <Text
+          style={[
+            styles.dayText,
+            isComplete && styles.darkText,
+            isPartial && styles.darkText,
+          ]}
+        >
+          {day}
+        </Text>
+      ) : null}
     </View>
   );
 };
@@ -142,6 +293,7 @@ const styles = StyleSheet.create({
     width: "100%",
     display: "flex",
     flexDirection: "row",
+    minHeight: 200,
   },
   titleText: {
     fontSize: 14,
@@ -152,20 +304,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   headerContainer: {
-    gap: 5,
+    gap: 3,
     display: "flex",
-    // width: "100%",
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    paddingBottom: 5,
-  },
-  streakIconContainer: {
-    width: "100%",
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingRight: 5,
+    paddingBottom: 3,
   },
   habitBox: {
     display: "flex",
@@ -179,7 +323,11 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "#A1A1AA",
   },
-  filledIn: {
+  complete: {
+    backgroundColor: "rgba(34, 197, 94, 0.7)",
+    borderColor: "#111318",
+  },
+  partial: {
     backgroundColor: "#b89b5e",
     borderColor: "#111318",
   },
@@ -187,6 +335,9 @@ const styles = StyleSheet.create({
     color: "#A1A1AA",
     fontSize: 10,
     fontWeight: "600",
+  },
+  darkText: {
+    color: "#111318",
   },
   navigationChevron: {
     display: "flex",

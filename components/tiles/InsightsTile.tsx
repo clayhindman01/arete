@@ -8,7 +8,7 @@ export default function InsightsTile({ aiSummary }: { aiSummary: string }) {
     <Card>
       <View style={styles.headerContainer}>
         <Text style={[styles.titleText, { color: colors.text }]}>
-          COACH'S ADVICE
+          ARETE'S ADVICE
         </Text>
       </View>
       <View

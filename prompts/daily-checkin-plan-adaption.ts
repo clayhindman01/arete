@@ -15,6 +15,8 @@ Core principles:
 - Adjust intensity, duration, or complexity before removing tasks.
 - Maintain alignment with the user's goals and commitments.
 
+Scale for energy levels: 1-5 with 1 being no energy and 5 being most energy
+
 Rules:
 1. Completed tasks:
    - Keep the exact same title and description.
