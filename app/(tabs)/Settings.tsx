@@ -36,9 +36,12 @@ export default function Settings() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
-      <SettingsHeader />
-
+    <SafeAreaView
+      style={{
+        flex: 1,
+        paddingTop: 10,
+      }}
+    >
       <SettingsButton label="Manage Subscription" />
       <SettingsButton label="Create a New Goal" disabled={true} />
       <SettingsButton label="Sign Out" onPress={handleSignOutPress} />
@@ -170,7 +173,7 @@ const SettingsButton = ({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        padding: 10,
+        padding: 5,
       }}
     >
       <TouchableOpacity

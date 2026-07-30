@@ -3,7 +3,11 @@ import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export default function Header() {
+export default function Header({
+  handleSettingsClick,
+}: {
+  handleSettingsClick: () => void;
+}) {
   const { colors } = useTheme();
   const router = useRouter();
 
@@ -51,7 +55,8 @@ export default function Header() {
       </View>
 
       <TouchableOpacity
-        onPress={() => router.navigate("/(tabs)/Settings")}
+        // onPress={() => router.navigate("/(tabs)/Settings")}
+        onPress={handleSettingsClick}
         style={{ position: "absolute", right: 15, top: 15 }}
       >
         <MaterialIcons name="settings" color="#A1A1AA" size={22} />

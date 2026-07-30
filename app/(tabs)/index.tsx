@@ -9,6 +9,7 @@ import Card from "@/components/ui/Card";
 import Header from "@/components/ui/Header";
 import Loader from "@/components/ui/Loader";
 import PulseText from "@/components/ui/PulseText";
+import SlideUpMenu from "@/components/ui/SlideUpMenu";
 import { getCurrentUser } from "@/lib/auth";
 import {
   createOrUpdateLatentPlan,
@@ -21,6 +22,7 @@ import { Redirect, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Settings from "./Settings";
 
 export default function Dashboard() {
   const [todaysTasks, setTodaysTasks] = useState<Tasks[]>([]);
@@ -45,6 +47,7 @@ export default function Dashboard() {
   const [calendarStatusOverrides, setCalendarStatusOverrides] = useState<
     Record<string, string>
   >({});
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(true);
 
   const deriveCalendarStatus = (tasks: Tasks[] | null | undefined) => {
     if (!tasks || tasks.length === 0) {
@@ -62,6 +65,10 @@ export default function Dashboard() {
     }
 
     return "partial";
+  };
+
+  const handleSettingsClick = () => {
+    setIsMenuOpen(true);
   };
 
   const fetchActivePlan = async () => {
@@ -128,7 +135,7 @@ export default function Dashboard() {
   if (getCurrentUser != null && todaysTasks) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
-        <Header />
+        <Header handleSettingsClick={handleSettingsClick} />
         <DailyProgress completed={completedTasks} total={todaysTasks.length} />
         <ScrollView style={{ marginBottom: -35 }}>
           <View style={{ padding: 5, paddingVertical: 10, marginBottom: 15 }}>
@@ -209,7 +216,13 @@ export default function Dashboard() {
                 setWeeklyReportComplete={setWeeklyReportComplete}
               />
             )}
-            {/* </ScrollView> */}
+            <SlideUpMenu
+              visible={isMenuOpen}
+              onClose={() => setIsMenuOpen(false)}
+              height="40%"
+            >
+              <Settings />
+            </SlideUpMenu>
           </View>
         </ScrollView>
       </SafeAreaView>
