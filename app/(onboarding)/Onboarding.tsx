@@ -82,26 +82,28 @@ export default function Onboarding() {
     }
   };
 
-  const handleSelectOption = (step: 1 | 2 | 3 | 4 | 5 | 6) => {
+  const handleSelectOption = (
+    step: 1 | 2 | 3 | 4 | 5 | 6,
+    nextFormData: OnboardingData = formData,
+  ) => {
     if (validateStep(step)) {
       if (step < 5) {
         setCurrentStep((step + 1) as 1 | 2 | 3 | 4 | 5 | 6);
         setErrors({});
       } else {
-        handleGeneratePlan();
+        handleGeneratePlan(nextFormData);
       }
     }
   };
 
-  const handleGeneratePlan = async () => {
+  const handleGeneratePlan = async (data: OnboardingData = formData) => {
     setCurrentStep(6);
-    // TODO: Save formData to database when ready
-    // For now, just mark onboarding as complete
-    console.log("Onboarding data:", formData);
-    generatePlan(formData).then((res) => {
-      setPlanData(JSON.parse(res.text));
-      console.log("Plan", JSON.parse(res.text));
-    });
+    console.log("Onboarding data:", data);
+
+    const res = await generatePlan(data);
+    const parsedPlan = JSON.parse(res.text);
+    setPlanData(parsedPlan);
+    console.log("Plan", parsedPlan);
   };
 
   const handleComplete = () => {
@@ -169,8 +171,9 @@ export default function Onboarding() {
                 options={GOAL_TIMELINE_OPTIONS}
                 value={formData.goalTimeline}
                 onChange={(value: GoalTimeline) => {
-                  setFormData({ ...formData, goalTimeline: value });
-                  handleSelectOption(3);
+                  const nextFormData = { ...formData, goalTimeline: value };
+                  setFormData(nextFormData);
+                  handleSelectOption(3, nextFormData);
                 }}
               />
               {errors.goalTimeline && (
@@ -208,8 +211,9 @@ export default function Onboarding() {
                 options={AVAILABLE_TIME_OPTIONS}
                 value={formData.availableTime}
                 onChange={(value: AvailableTime) => {
-                  setFormData({ ...formData, availableTime: value });
-                  handleSelectOption(5);
+                  const nextFormData = { ...formData, availableTime: value };
+                  setFormData(nextFormData);
+                  handleSelectOption(5, nextFormData);
                 }}
               />
               {errors.availableTime && (

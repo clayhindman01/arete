@@ -11,10 +11,10 @@ export default function EverythingCompletedTile() {
           color="rgba(34, 197, 94, 0.7)"
           size={50}
         />
-        <View style={{ paddingLeft: 10 }}>
+        <View style={{ paddingHorizontal: 10, width: "90%" }}>
           <Text style={styles.titleText}>TODAY COMPLETE</Text>
           <Text style={styles.subText}>
-            You're making progress towards your goal!
+            You're making progress towards your goal! Keep it up tomorrow.
           </Text>
         </View>
       </View>
@@ -24,6 +24,7 @@ export default function EverythingCompletedTile() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
@@ -38,7 +39,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#A1A1AA",
     letterSpacing: 1,
-    width: "90%",
     paddingVertical: 5,
   },
 });

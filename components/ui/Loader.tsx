@@ -10,7 +10,7 @@ type LoaderProps = {
 
 export default function Loader({
   size = "large",
-  color = "#7c93ff",
+  color = "#A1A1AA",
   text,
   fullScreen = false,
   style,

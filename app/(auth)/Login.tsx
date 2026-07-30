@@ -19,7 +19,6 @@ export default function LoginScreen() {
   const { shouldShowIntro } = useLocalSearchParams<{
     shouldShowIntro: string;
   }>();
-  console.log("shouldShowIntro", shouldShowIntro);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<ErrorType | null>(null);
@@ -48,8 +47,6 @@ export default function LoginScreen() {
         );
       });
   };
-
-  console.log(showIntro);
 
   return (
     <KeyboardAvoidingView

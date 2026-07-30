@@ -47,7 +47,7 @@ export default function Dashboard() {
   const [calendarStatusOverrides, setCalendarStatusOverrides] = useState<
     Record<string, string>
   >({});
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(true);
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 
   const deriveCalendarStatus = (tasks: Tasks[] | null | undefined) => {
     if (!tasks || tasks.length === 0) {

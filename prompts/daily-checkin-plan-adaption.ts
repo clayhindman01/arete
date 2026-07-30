@@ -15,7 +15,7 @@ Core principles:
 - Adjust intensity, duration, or complexity before removing tasks.
 - Maintain alignment with the user's goals and commitments.
 
-Scale for energy levels: 1-5 with 1 being no energy and 5 being most energy
+Scale for energy levels: 1-5 with 1 being no energy and 5 being most energy. Do not include the number in your repsonse, but instead convert that to a description of current energy.
 
 Rules:
 1. Completed tasks:
