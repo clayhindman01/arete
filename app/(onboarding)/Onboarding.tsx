@@ -1,7 +1,7 @@
 import Button from "@/components/ui/Button";
 import ButtonGroup from "@/components/ui/ButtonGroup";
+import Loader from "@/components/ui/Loader";
 import PlanComponent from "@/components/ui/PlanComponent";
-import PulseText from "@/components/ui/PulseText";
 import TextField from "@/components/ui/TextField";
 import { generatePlan } from "@/lib/ai";
 import { completeOnboarding, saveGeneratedPlan } from "@/lib/db";
@@ -31,7 +31,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function Onboarding() {
   const router = useRouter();
   const { profile, refreshProfile } = useProfile();
-  const [showIntro, setShowIntro] = useState(true);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(2);
   const [planData, setPlanData] = useState<PlanGeneration>();
   const [formData, setFormData] = useState<OnboardingData>({
@@ -44,6 +43,7 @@ export default function Onboarding() {
   const [errors, setErrors] = useState<
     Partial<Record<keyof OnboardingData, string>>
   >({});
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const validateStep = (step: number): boolean => {
     const newErrors: typeof errors = {};
@@ -71,7 +71,6 @@ export default function Onboarding() {
       case 6:
         break;
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -103,159 +102,155 @@ export default function Onboarding() {
       setPlanData(JSON.parse(res.text));
       console.log("Plan", JSON.parse(res.text));
     });
-
-    // Mark onboarding as complete and navigate
   };
 
   const handleComplete = () => {
     if (profile && planData) {
+      setIsLoading(true);
       // Update profile to mark onboarding complete
       saveGeneratedPlan(profile.id, planData).then(() => {
         completeOnboarding().then(async () => {
           await refreshProfile();
           router.replace("/(tabs)");
+          router.push({
+            pathname: "/(tabs)",
+            params: { shouldShowIntro: "false" },
+          });
         });
       });
     }
   };
 
+  if (isLoading) return <Loader />;
+
   return (
     <SafeAreaView style={[styles.page, { backgroundColor: "#09090B" }]}>
-      {showIntro ? (
-        <PulseText
-          onAnimationComplete={() => setShowIntro(false)}
-          route="onboarding"
-        />
-      ) : (
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.container}
-        >
-          <View style={styles.content}>
-            {currentStep === 1 && (
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        <View style={styles.content}>
+          {currentStep === 1 && (
+            <View>
+              <Text style={styles.stepTitle}>What should I call you?</Text>
+              <TextField
+                placeholder="Enter your name"
+                value={formData.name}
+                onChangeText={(text) => {
+                  setFormData({ ...formData, name: text });
+                  if (errors.name) setErrors({ ...errors, name: undefined });
+                }}
+                error={errors.name}
+              />
+            </View>
+          )}
+
+          {currentStep === 2 && (
+            <View>
+              <Text style={styles.stepTitle}>WHAT IS YOUR GOAL?</Text>
+              <TextField
+                placeholder="Describe your goal"
+                value={formData.goal}
+                onChangeText={(text) => {
+                  setFormData({ ...formData, goal: text });
+                  if (errors.goal) setErrors({ ...errors, goal: undefined });
+                }}
+                error={errors.goal}
+              />
+            </View>
+          )}
+
+          {currentStep === 3 && (
+            <View>
+              <Text style={styles.stepTitle}>
+                WHEN DO YOU WANT TO ACHIEVE YOUR GOAL?
+              </Text>
+              <ButtonGroup
+                options={GOAL_TIMELINE_OPTIONS}
+                value={formData.goalTimeline}
+                onChange={(value: GoalTimeline) => {
+                  setFormData({ ...formData, goalTimeline: value });
+                  handleSelectOption(3);
+                }}
+              />
+              {errors.goalTimeline && (
+                <Text style={styles.errorText}>{errors.goalTimeline}</Text>
+              )}
+            </View>
+          )}
+
+          {currentStep === 4 && (
+            <View>
+              <Text style={styles.stepTitle}>WHERE ARE YOU STARTING AT?</Text>
+              <Text style={styles.subText}>
+                (The more details you include the more accurate your plan will
+                be)
+              </Text>
+              <TextField
+                placeholder="Describe your current situation"
+                value={formData.startingPoint}
+                onChangeText={(text) => {
+                  setFormData({ ...formData, startingPoint: text });
+                  if (errors.startingPoint)
+                    setErrors({ ...errors, startingPoint: undefined });
+                }}
+                error={errors.startingPoint}
+              />
+            </View>
+          )}
+
+          {currentStep === 5 && (
+            <View>
+              <Text style={styles.stepTitle}>
+                HOW MUCH TIME DAILY DO YOU HAVE AVAILABLE?
+              </Text>
+              <ButtonGroup
+                options={AVAILABLE_TIME_OPTIONS}
+                value={formData.availableTime}
+                onChange={(value: AvailableTime) => {
+                  setFormData({ ...formData, availableTime: value });
+                  handleSelectOption(5);
+                }}
+              />
+              {errors.availableTime && (
+                <Text style={styles.errorText}>{errors.availableTime}</Text>
+              )}
+            </View>
+          )}
+
+          {currentStep === 6 &&
+            (planData ? (
               <View>
-                <Text style={styles.stepTitle}>What should I call you?</Text>
-                <TextField
-                  placeholder="Enter your name"
-                  value={formData.name}
-                  onChangeText={(text) => {
-                    setFormData({ ...formData, name: text });
-                    if (errors.name) setErrors({ ...errors, name: undefined });
-                  }}
-                  error={errors.name}
-                />
+                <Text style={styles.stepTitle}>ARETE'S PLAN</Text>
+                <Text style={styles.goalText}>{planData.goal.title}</Text>
+                <Text style={styles.subText}>{planData.goal.description}</Text>
+                {planData?.commitments.map((commitment, index) => (
+                  <PlanComponent key={index} commitment={commitment} />
+                ))}
               </View>
-            )}
+            ) : (
+              <>
+                <Text style={styles.stepTitle}>Creating Plan</Text>
+                <ActivityIndicator size="large" color="white" />
+              </>
+            ))}
 
-            {currentStep === 2 && (
-              <View>
-                <Text style={styles.stepTitle}>WHAT IS YOUR GOAL?</Text>
-                <TextField
-                  placeholder="Describe your goal"
-                  value={formData.goal}
-                  onChangeText={(text) => {
-                    setFormData({ ...formData, goal: text });
-                    if (errors.goal) setErrors({ ...errors, goal: undefined });
-                  }}
-                  error={errors.goal}
-                />
-              </View>
-            )}
-
-            {currentStep === 3 && (
-              <View>
-                <Text style={styles.stepTitle}>
-                  WHEN DO YOU WANT TO ACHIEVE YOUR GOAL?
-                </Text>
-                <ButtonGroup
-                  options={GOAL_TIMELINE_OPTIONS}
-                  value={formData.goalTimeline}
-                  onChange={(value: GoalTimeline) => {
-                    setFormData({ ...formData, goalTimeline: value });
-                    handleSelectOption(3);
-                  }}
-                />
-                {errors.goalTimeline && (
-                  <Text style={styles.errorText}>{errors.goalTimeline}</Text>
-                )}
-              </View>
-            )}
-
-            {currentStep === 4 && (
-              <View>
-                <Text style={styles.stepTitle}>WHERE ARE YOU STARTING AT?</Text>
-                <Text style={styles.subText}>
-                  (The more details you include the more accurate your plan will
-                  be)
-                </Text>
-                <TextField
-                  placeholder="Describe your current situation"
-                  value={formData.startingPoint}
-                  onChangeText={(text) => {
-                    setFormData({ ...formData, startingPoint: text });
-                    if (errors.startingPoint)
-                      setErrors({ ...errors, startingPoint: undefined });
-                  }}
-                  error={errors.startingPoint}
-                />
-              </View>
-            )}
-
-            {currentStep === 5 && (
-              <View>
-                <Text style={styles.stepTitle}>
-                  HOW MUCH TIME DAILY DO YOU HAVE AVAILABLE?
-                </Text>
-                <ButtonGroup
-                  options={AVAILABLE_TIME_OPTIONS}
-                  value={formData.availableTime}
-                  onChange={(value: AvailableTime) => {
-                    setFormData({ ...formData, availableTime: value });
-                    handleSelectOption(5);
-                  }}
-                />
-                {errors.availableTime && (
-                  <Text style={styles.errorText}>{errors.availableTime}</Text>
-                )}
-              </View>
-            )}
-
-            {currentStep === 6 &&
-              (planData ? (
-                <View>
-                  <Text style={styles.stepTitle}>ARETE'S PLAN</Text>
-                  <Text style={styles.goalText}>{planData.goal.title}</Text>
-                  <Text style={styles.subText}>
-                    {planData.goal.description}
-                  </Text>
-                  {planData?.commitments.map((commitment, index) => (
-                    <PlanComponent key={index} commitment={commitment} />
-                  ))}
-                </View>
-              ) : (
-                <>
-                  <Text style={styles.stepTitle}>Creating Plan</Text>
-                  <ActivityIndicator size="large" color="white" />
-                </>
-              ))}
-
-            {(currentStep === 1 || currentStep === 2 || currentStep === 4) && (
-              <View style={styles.actions}>
-                <Button label="Next" type="primary" onPress={handleNext} />
-              </View>
-            )}
-            {currentStep === 6 && planData && (
-              <View style={styles.actions}>
-                <Button
-                  label="Create Plan"
-                  type="primary"
-                  onPress={handleComplete}
-                />
-              </View>
-            )}
-          </View>
-        </KeyboardAvoidingView>
-      )}
+          {(currentStep === 1 || currentStep === 2 || currentStep === 4) && (
+            <View style={styles.actions}>
+              <Button label="Next" type="primary" onPress={handleNext} />
+            </View>
+          )}
+          {currentStep === 6 && planData && (
+            <View style={styles.actions}>
+              <Button
+                label="Create Plan"
+                type="primary"
+                onPress={handleComplete}
+              />
+            </View>
+          )}
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

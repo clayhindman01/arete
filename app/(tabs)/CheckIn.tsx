@@ -1,5 +1,6 @@
 import Button from "@/components/ui/Button";
 import ButtonGroup from "@/components/ui/ButtonGroup";
+import Loader from "@/components/ui/Loader";
 import TextField from "@/components/ui/TextField";
 import { generateAdaptiveDailyPlan } from "@/lib/ai";
 import { getCurrentUser } from "@/lib/auth";
@@ -60,12 +61,13 @@ export default function CheckIn() {
     availableTime: null,
     todaysImpediments: "",
   });
-
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   console.log("todaysTasks in CheckIn.tsx", params.todaysTasks);
   const router = useRouter();
 
-  async function submitCheckIn(checkIn: any){
+  async function submitCheckIn(checkIn: any) {
+    setIsLoading(true);
     await createDailyCheckIn(checkIn);
 
     const user = await getCurrentUser();
@@ -73,16 +75,20 @@ export default function CheckIn() {
     generateAdaptiveDailyPlan({
       tasks: JSON.parse(params.todaysTasks as string),
       checkIn,
-    }).then(async (res) => {
-      console.log("Adaptive Plan:", JSON.parse(res.text));
-      await saveAdaptiveDailyPlan(
-        JSON.parse(res.text),
-        user.id
-      );
-    }).then(() => {
-      setCurrentStep(1);
-      router.back();
     })
+      .then(async (res) => {
+        console.log("Adaptive Plan:", JSON.parse(res.text));
+        await saveAdaptiveDailyPlan(JSON.parse(res.text), user.id);
+      })
+      .then(() => {
+        setCurrentStep(1);
+        router.back();
+        setIsLoading(false);
+      });
+  }
+
+  if (isLoading) {
+    return <Loader />;
   }
 
   return (

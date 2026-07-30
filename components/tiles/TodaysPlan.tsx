@@ -24,7 +24,7 @@ export default function TodaysPlan({
   return (
     <Card>
       <View style={styles.headerContainer}>
-        <Text style={[styles.titleText, { color: colors.text }]}>
+        <Text style={[styles.titleText, { color: "#A1A1AA" }]}>
           TODAY'S PLAN
         </Text>
 
@@ -161,7 +161,10 @@ const CheckListItem = ({
         </Pressable>
         <Pressable
           onPress={() => setIsExpanded(!isExpanded)}
-          style={{ paddingHorizontal: 10 }}
+          style={{
+            paddingHorizontal: 10,
+            width: "75%",
+          }}
         >
           {title &&
             renderTextContent(title, {
@@ -170,6 +173,7 @@ const CheckListItem = ({
               textDecorationLine: isChecked ? "line-through" : "none",
               textDecorationColor: "#b89b5e",
               letterSpacing: 1.5,
+              textAlign: "center",
             })}
         </Pressable>
         <Pressable onPress={() => setIsExpanded(!isExpanded)}>
@@ -184,7 +188,7 @@ const CheckListItem = ({
         <View
           style={{
             width: "100%",
-            paddingHorizontal: 30,
+            paddingHorizontal: 40,
             justifyContent: "center",
             alignItems: "center",
           }}
@@ -230,6 +234,7 @@ const styles = StyleSheet.create({
     color: "#F5F5F5",
     fontWeight: 600,
     letterSpacing: 1,
+    // textAlign: "center",
   },
   titleSubText: {
     fontSize: 12,

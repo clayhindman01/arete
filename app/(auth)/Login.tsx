@@ -1,7 +1,7 @@
 import Button from "@/components/ui/Button";
+import PulseText from "@/components/ui/PulseText";
 import { signIn } from "@/lib/auth";
-import { useTheme } from "@react-navigation/native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Keyboard,
@@ -16,16 +16,29 @@ import {
 import { ErrorComponent, ErrorType, handleError } from "../../lib/auth.util";
 
 export default function LoginScreen() {
+  const { shouldShowIntro } = useLocalSearchParams<{
+    shouldShowIntro: string;
+  }>();
+  console.log("shouldShowIntro", shouldShowIntro);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<ErrorType | null>(null);
+  const [showIntro, setShowIntro] = useState<string>(
+    shouldShowIntro === undefined ? "true" : shouldShowIntro,
+  );
 
   const router = useRouter();
-  const { colors } = useTheme();
 
   const logIn = () => {
     signIn(email, password)
-      .then(() => router.navigate("/(tabs)"))
+      .then(() => {
+        router.push({
+          pathname: "/(tabs)",
+          params: {
+            shouldShowIntro: "false",
+          },
+        });
+      })
       .catch((error) => {
         setError(
           handleError({
@@ -36,57 +49,63 @@ export default function LoginScreen() {
       });
   };
 
+  console.log(showIntro);
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.inner}>
-          <Text style={styles.title}>ARETE</Text>
-          <Text style={styles.subtitle}>
-            Small Commitments. Sustained Growth.
-          </Text>
+      {showIntro === "true" ? (
+        <PulseText onAnimationComplete={() => setShowIntro("false")} />
+      ) : (
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.inner}>
+            <Text style={styles.title}>ARETE</Text>
+            <Text style={styles.subtitle}>
+              Small Commitments. Sustained Growth.
+            </Text>
 
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Email"
-            placeholderTextColor="#64748b"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email"
+              placeholderTextColor="#64748b"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
 
-          <TextInput
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Password"
-            placeholderTextColor="#64748b"
-            secureTextEntry
-          />
+            <TextInput
+              style={styles.input}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Password"
+              placeholderTextColor="#64748b"
+              secureTextEntry
+            />
 
-          {error && <ErrorComponent label={error.message} />}
+            {error && <ErrorComponent label={error.message} />}
 
-          <Button type="primary" onPress={logIn} label="Log In" />
-          <View style={styles.dividerRow}>
-            <View style={styles.line} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.line} />
+            <Button type="primary" onPress={logIn} label="Log In" />
+            <View style={styles.dividerRow}>
+              <View style={styles.line} />
+              <Text style={styles.dividerText}>or</Text>
+              <View style={styles.line} />
+            </View>
+
+            <Button
+              label="Create New Account"
+              type="secondary"
+              onPress={() => router.navigate("/(auth)/Signup")}
+            />
+
+            <Text style={styles.footer}>
+              By continuing you agree to Arete Terms & Privacy Policy
+            </Text>
           </View>
-
-          <Button
-            label="Create New Account"
-            type="secondary"
-            onPress={() => router.navigate("/(auth)/Signup")}
-          />
-
-          <Text style={styles.footer}>
-            By continuing you agree to Arete Terms & Privacy Policy
-          </Text>
-        </View>
-      </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback>
+      )}
     </KeyboardAvoidingView>
   );
 }

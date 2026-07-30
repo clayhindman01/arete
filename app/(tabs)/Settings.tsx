@@ -27,7 +27,11 @@ export default function Settings() {
 
   const handleSignOutPress = () => {
     signOut().then(() => {
-      router.navigate("/(auth)/Login");
+      // router.navigate("/(auth)/Login", );
+      router.push({
+        pathname: "/(auth)/Login",
+        params: { shouldShowIntro: "false" },
+      });
     });
   };
 
@@ -173,9 +177,7 @@ const SettingsButton = ({
         onPress={() => (disabled ? handleDisabledPress() : onPress())}
         style={{
           backgroundColor:
-            severity === "critical"
-              ? "rgb(195, 86, 86)"
-              : "rgba(148,163,184,0.3)",
+            severity === "critical" ? "rgb(195, 86, 86)" : "none",
           width: "100%",
           padding: 15,
           borderWidth: 1,

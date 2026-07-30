@@ -2,10 +2,12 @@ import DailyProgress from "@/components/DailyProgress";
 import HabitsStreaksLayout from "@/components/HabitsStreaksLayout";
 import DailyCheckInTile from "@/components/tiles/DailyCheckInTile";
 import EverythingCompletedTile from "@/components/tiles/EverythingCompletedTile";
+import InsightsTile from "@/components/tiles/InsightsTile";
 import TodaysPlan from "@/components/tiles/TodaysPlan";
 import WeeklyReportTile from "@/components/tiles/WeeklyReportTile";
 import Card from "@/components/ui/Card";
 import Header from "@/components/ui/Header";
+import Loader from "@/components/ui/Loader";
 import PulseText from "@/components/ui/PulseText";
 import { getCurrentUser } from "@/lib/auth";
 import {
@@ -15,7 +17,7 @@ import {
   hasCompletedDailyCheckInToday,
 } from "@/lib/db";
 import { Tasks } from "@/types/PlanGeneration";
-import { Redirect, useFocusEffect } from "expo-router";
+import { Redirect, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -30,6 +32,12 @@ export default function Dashboard() {
   const [isWeeklyReportAvailable, setIsWeeklyReportAvailable] =
     useState<boolean>(false);
   const [aiSummary, setAiSummary] = useState<string>("");
+  const { shouldShowIntro } = useLocalSearchParams<{
+    shouldShowIntro: string;
+  }>();
+  const [showIntro, setShowIntro] = useState<string>(
+    shouldShowIntro === undefined ? "true" : shouldShowIntro,
+  );
 
   const [latentPlan, setLatentPlan] = useState<any | null>(null);
   const [goal, setGoal] = useState<string | null>(null);
@@ -76,15 +84,12 @@ export default function Dashboard() {
               completed: Boolean(task.completed),
             }),
           );
+          console.log("Normalized tasks", normalizedTasks);
 
           setTodaysTasks(normalizedTasks);
           setAiSummary(todaysPlan?.aiSummary ?? "");
-          // setIsLoading(false);
         },
       );
-      setTodaysTasks(todaysTasks.tasks ?? []);
-      setAiSummary(todaysTasks.aiSummary ?? "");
-      // setIsLoading(false);
     } catch (error) {
       console.error("Error fetching active plan:", error);
     }
@@ -100,7 +105,7 @@ export default function Dashboard() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchActivePlan();
+      fetchActivePlan().then(() => setIsLoading(false));
     }, []),
   );
 
@@ -108,9 +113,15 @@ export default function Dashboard() {
     () => todaysTasks.filter((task) => task.completed).length,
     [todaysTasks],
   );
+  if (isLoading && showIntro === "true") {
+    return <PulseText route="home" />;
+  }
+
   if (isLoading) {
     return (
-      <PulseText onAnimationComplete={() => setIsLoading(false)} route="home" />
+      <View style={{ flex: 1 }}>
+        <Loader />
+      </View>
     );
   }
 
@@ -138,11 +149,6 @@ export default function Dashboard() {
                 Goal: {goal}.
               </Text>
             </Card>
-
-            <HabitsStreaksLayout
-              refreshKey={calendarRefreshKey}
-              statusOverrides={calendarStatusOverrides}
-            />
             {isWeeklyReportAvailable && !weeklyReportComplete && (
               <WeeklyReportTile
                 weeklyReportComplete={weeklyReportComplete}
@@ -156,6 +162,13 @@ export default function Dashboard() {
                 todaysTasks={latentPlan}
               />
             )}
+            {aiSummary && dailyCheckInComplete && (
+              <InsightsTile aiSummary={aiSummary} />
+            )}
+            <HabitsStreaksLayout
+              refreshKey={calendarRefreshKey}
+              statusOverrides={calendarStatusOverrides}
+            />
 
             <TodaysPlan
               aiSummary={aiSummary}
@@ -182,9 +195,6 @@ export default function Dashboard() {
                 setCalendarRefreshKey((value) => value + 1);
               }}
             />
-            {/* {aiSummary && dailyCheckInComplete && (
-              <InsightsTile aiSummary={aiSummary} />
-            )} */}
 
             {dailyCheckInComplete && (
               <DailyCheckInTile
