@@ -10,24 +10,8 @@ export default function Settings() {
   const { colors } = useTheme();
   const router = useRouter();
 
-  const accountabilityOptions: Array<optionsType> = [
-    {
-      label: "Low",
-      value: "low",
-    },
-    { label: "Medium", value: "medium" },
-    { label: "High", value: "high" },
-  ];
-
-  const motivationOptions: Array<optionsType> = [
-    { label: "Supportive", value: "supportive" },
-    { label: "Direct", value: "directly" },
-    { label: "Aggressive", value: "aggressive" },
-  ];
-
   const handleSignOutPress = () => {
     signOut().then(() => {
-      // router.navigate("/(auth)/Login", );
       router.push({
         pathname: "/(auth)/Login",
         params: { shouldShowIntro: "false" },

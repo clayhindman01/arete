@@ -2,10 +2,10 @@ import DailyProgress from "@/components/DailyProgress";
 import HabitsStreaksLayout from "@/components/HabitsStreaksLayout";
 import DailyCheckInTile from "@/components/tiles/DailyCheckInTile";
 import EverythingCompletedTile from "@/components/tiles/EverythingCompletedTile";
-import InsightsTile from "@/components/tiles/InsightsTile";
 import TodaysPlan from "@/components/tiles/TodaysPlan";
 import WeeklyReportTile from "@/components/tiles/WeeklyReportTile";
 import Card from "@/components/ui/Card";
+import DailyCheckinRecap from "@/components/ui/DailyCheckinRecap";
 import Header from "@/components/ui/Header";
 import Loader from "@/components/ui/Loader";
 import PulseText from "@/components/ui/PulseText";
@@ -23,6 +23,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Settings from "./Settings";
+
+type MenuOption = "settings" | "checkin" | "date";
 
 export default function Dashboard() {
   const [todaysTasks, setTodaysTasks] = useState<Tasks[]>([]);
@@ -48,6 +50,7 @@ export default function Dashboard() {
     Record<string, string>
   >({});
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const [selectedMenu, setSelectedMenu] = useState<MenuOption>();
 
   const deriveCalendarStatus = (tasks: Tasks[] | null | undefined) => {
     if (!tasks || tasks.length === 0) {
@@ -67,8 +70,13 @@ export default function Dashboard() {
     return "partial";
   };
 
-  const handleSettingsClick = () => {
+  const handleSelectedMenuPress = (value: MenuOption) => {
+    setSelectedMenu(value);
+  };
+
+  const handleMenuClick = (label: MenuOption) => {
     setIsMenuOpen(true);
+    handleSelectedMenuPress(label);
   };
 
   const fetchActivePlan = async () => {
@@ -120,6 +128,16 @@ export default function Dashboard() {
     () => todaysTasks.filter((task) => task.completed).length,
     [todaysTasks],
   );
+
+  const renderMenuComponent = () => {
+    switch (selectedMenu) {
+      case "settings":
+        return <Settings />;
+      case "checkin":
+        return <DailyCheckinRecap aiSummary={aiSummary} />;
+    }
+  };
+
   if (isLoading && showIntro === "true") {
     return <PulseText route="home" />;
   }
@@ -135,7 +153,7 @@ export default function Dashboard() {
   if (getCurrentUser != null && todaysTasks) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
-        <Header handleSettingsClick={handleSettingsClick} />
+        <Header handleSettingsClick={() => handleMenuClick("settings")} />
         <DailyProgress completed={completedTasks} total={todaysTasks.length} />
         <ScrollView style={{ marginBottom: -35 }}>
           <View style={{ padding: 5, paddingVertical: 10, marginBottom: 15 }}>
@@ -167,11 +185,12 @@ export default function Dashboard() {
                 dailyCheckInComplete={dailyCheckInComplete}
                 setDailyCheckInComplete={setDailyCheckInComplete}
                 todaysTasks={latentPlan}
+                handleDailyCheckinMenuPress={() => handleMenuClick("checkin")}
               />
             )}
-            {aiSummary && dailyCheckInComplete && (
+            {/* {aiSummary && dailyCheckInComplete && (
               <InsightsTile aiSummary={aiSummary} />
-            )}
+            )} */}
             <HabitsStreaksLayout
               refreshKey={calendarRefreshKey}
               statusOverrides={calendarStatusOverrides}
@@ -208,6 +227,7 @@ export default function Dashboard() {
                 dailyCheckInComplete={dailyCheckInComplete}
                 setDailyCheckInComplete={setDailyCheckInComplete}
                 todaysTasks={todaysTasks}
+                handleDailyCheckinMenuPress={() => handleMenuClick("checkin")}
               />
             )}
             {isWeeklyReportAvailable && weeklyReportComplete && (
@@ -219,9 +239,9 @@ export default function Dashboard() {
             <SlideUpMenu
               visible={isMenuOpen}
               onClose={() => setIsMenuOpen(false)}
-              height="40%"
+              height="70%"
             >
-              <Settings />
+              {renderMenuComponent()}
             </SlideUpMenu>
           </View>
         </ScrollView>

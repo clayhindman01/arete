@@ -8,10 +8,12 @@ export default function DailyCheckInTile({
   dailyCheckInComplete,
   setDailyCheckInComplete,
   todaysTasks,
+  handleDailyCheckinMenuPress,
 }: {
   dailyCheckInComplete: boolean;
   setDailyCheckInComplete: (complete: boolean) => void;
   todaysTasks: any;
+  handleDailyCheckinMenuPress: () => void;
 }) {
   const { colors } = useTheme();
   const router = useRouter();
@@ -84,7 +86,9 @@ export default function DailyCheckInTile({
         </View>
       </View>
       <TouchableOpacity
-        onPress={handlePress}
+        onPress={
+          dailyCheckInComplete ? handleDailyCheckinMenuPress : handlePress
+        }
         style={{
           display: "flex",
           justifyContent: "center",

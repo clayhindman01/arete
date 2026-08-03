@@ -474,3 +474,24 @@ export async function getCalendar(date: Date) {
 
   return data;
 }
+
+export async function getCheckinData() {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const user = await getUser();
+  const { data: checkin, error } = await supabase
+    .from("check_ins")
+    .select("*")
+    .eq("user_id", user.id)
+    .gte("created_at", startOfDay.toISOString())
+    .lte("created_at", endOfDay.toISOString())
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return checkin;
+}

@@ -29,7 +29,7 @@ type YesterdayDifficulty =
   | "very-difficult";
 type EnergyScale = 1 | 2 | 3 | 4 | 5;
 
-const YESTERDAY_DIFFICULTY_OPTIONS = [
+export const YESTERDAY_DIFFICULTY_OPTIONS = [
   { label: "Very Easy", value: "very-easy" as YesterdayDifficulty },
   { label: "Easy", value: "easy" as YesterdayDifficulty },
   { label: "About Right", value: "about-right" as YesterdayDifficulty },
@@ -37,7 +37,7 @@ const YESTERDAY_DIFFICULTY_OPTIONS = [
   { label: "Very Difficult", value: "very-difficult" as YesterdayDifficulty },
 ];
 
-const ENERGY_SCALE = [
+export const ENERGY_SCALE = [
   { label: "Running on empty", value: 1 as EnergyScale },
   { label: "Low energy", value: 2 as EnergyScale },
   { label: "Normal", value: 3 as EnergyScale },

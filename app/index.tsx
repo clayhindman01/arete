@@ -7,12 +7,11 @@ import { getProfile } from "@/lib/db";
 
 export default function Index() {
   const { session, loading } = useSession();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [profile, setProfile] = useState<{
     onboarding_complete: boolean;
   } | null>(null);
-
-  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -27,14 +26,14 @@ export default function Index() {
       } catch (error) {
         console.error("Failed to load profile:", error);
       } finally {
-        setProfileLoading(false);
+        setIsLoading(false);
       }
     };
 
     loadProfile();
   }, [session]);
 
-  if (loading) {
+  if (loading || isLoading) {
     return (
       <View
         style={{

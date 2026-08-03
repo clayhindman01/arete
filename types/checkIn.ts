@@ -3,7 +3,7 @@ export type CheckIn = {
   user_id: string;
   created_at: string;
   energy_level: number | null;
-  soreness_level: number | null;
-  motivation_level: number | null;
+  difficulty_rating: string | null;
   notes: string | null;
+  available_time: string | null;
 };

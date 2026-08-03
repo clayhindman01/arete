@@ -8,7 +8,7 @@ export default function InsightsTile({ aiSummary }: { aiSummary: string }) {
     <Card>
       <View style={styles.headerContainer}>
         <Text style={[styles.titleText, { color: colors.text }]}>
-          ARETE'S ADVICE
+          CHECK-IN RECAP
         </Text>
       </View>
       <View
@@ -17,7 +17,6 @@ export default function InsightsTile({ aiSummary }: { aiSummary: string }) {
           flexDirection: "row",
           alignItems: "center",
           gap: 5,
-          // paddingLeft: 5,
           paddingBottom: 5,
         }}
       >
@@ -43,11 +42,11 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingBottom: 10,
   },
   titleText: {
-    fontSize: 14,
+    fontSize: 20,
     color: "#F5F5F5",
     fontWeight: 600,
     letterSpacing: 1,
