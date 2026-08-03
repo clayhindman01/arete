@@ -17,7 +17,13 @@ import {
   getOrCreatePreCheckinDailyPlan,
   hasCompletedDailyCheckInToday,
 } from "@/lib/db";
+import { registerForNotifications } from "@/lib/notifications";
+import {
+  cancelCompletionReminder,
+  scheduleDailyNotifications,
+} from "@/lib/scheduleNotifications";
 import { Tasks } from "@/types/PlanGeneration";
+import * as Notifications from "expo-notifications";
 import { Redirect, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -79,6 +85,27 @@ export default function Dashboard() {
     handleSelectedMenuPress(label);
   };
 
+  const testNoifications = async () => {
+    registerForNotifications();
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== "granted") {
+      console.log("Notification permission not granted");
+      return;
+    }
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Test Notification",
+        body: "This is a test notification.",
+        sound: true,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 5, // Trigger after 5 seconds
+      },
+    });
+  };
+
   const fetchActivePlan = async () => {
     try {
       const plan = await getActivePlan();
@@ -110,12 +137,20 @@ export default function Dashboard() {
     }
   };
 
+  const setNotification = async () => {
+    const enabled = await registerForNotifications();
+
+    if (enabled) {
+      await scheduleDailyNotifications();
+    }
+  };
+
   useEffect(() => {
     hasCompletedDailyCheckInToday().then((completed) => {
       setDailyCheckInComplete(completed);
     });
-
     fetchActivePlan();
+    setNotification();
   }, []);
 
   useFocusEffect(
@@ -123,6 +158,12 @@ export default function Dashboard() {
       fetchActivePlan().then(() => setIsLoading(false));
     }, []),
   );
+
+  useEffect(() => {
+    if (todaysTasks.length === completedTasks && todaysTasks.length > 0) {
+      cancelCompletionReminder();
+    }
+  }, [todaysTasks]);
 
   const completedTasks = useMemo(
     () => todaysTasks.filter((task) => task.completed).length,

@@ -133,7 +133,7 @@ const CheckListItem = ({
 
     try {
       if (task.id) {
-        await toggleTask(task.id, nextValue);
+        await toggleTask(task.id, nextValue).then(() => {});
       }
       onTaskToggle?.(task, nextValue);
     } catch (error) {
