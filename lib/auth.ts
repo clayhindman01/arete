@@ -1,5 +1,6 @@
 import { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
+import { logEvent } from "./analytics";
 import { supabase } from "./supabase";
 
 export async function signUp(email: string, password: string) {
@@ -9,6 +10,12 @@ export async function signUp(email: string, password: string) {
   });
 
   if (error) throw error;
+  // non-blocking analytics
+  void logEvent(
+    "sign_up_completed",
+    { email: String(email) },
+    data?.user?.id ?? null,
+  );
   return data;
 }
 

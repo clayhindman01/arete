@@ -4,27 +4,28 @@ import Loader from "@/components/ui/Loader";
 import PlanComponent from "@/components/ui/PlanComponent";
 import TextField from "@/components/ui/TextField";
 import { generatePlan } from "@/lib/ai";
+import { logEvent } from "@/lib/analytics";
 import { completeOnboarding, saveGeneratedPlan } from "@/lib/db";
 import { useProfile } from "@/lib/ProfileContext";
 import type {
-  AvailableTime,
-  GoalTimeline,
-  OnboardingData,
+    AvailableTime,
+    GoalTimeline,
+    OnboardingData,
 } from "@/types/onboarding";
 import {
-  AVAILABLE_TIME_OPTIONS,
-  GOAL_TIMELINE_OPTIONS,
+    AVAILABLE_TIME_OPTIONS,
+    GOAL_TIMELINE_OPTIONS,
 } from "@/types/onboarding";
 import { PlanGeneration } from "@/types/PlanGeneration";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -104,6 +105,14 @@ export default function Onboarding() {
     const parsedPlan = JSON.parse(res.text);
     setPlanData(parsedPlan);
     console.log("Plan", parsedPlan);
+    // non-blocking analytics
+    void logEvent(
+      "plan_generated",
+      {
+        goal_title: parsedPlan?.goal?.title ?? null,
+      },
+      profile?.id ?? null,
+    );
   };
 
   const handleComplete = () => {
@@ -112,6 +121,12 @@ export default function Onboarding() {
       // Update profile to mark onboarding complete
       saveGeneratedPlan(profile.id, planData).then(() => {
         completeOnboarding().then(async () => {
+          // non-blocking analytics
+          void logEvent(
+            "onboarding_completed",
+            { plan_created: true },
+            profile.id,
+          );
           await refreshProfile();
           router.replace("/(tabs)");
           router.push({

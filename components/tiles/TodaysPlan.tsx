@@ -1,3 +1,4 @@
+import { logEvent } from "@/lib/analytics";
 import { toggleTask } from "@/lib/db";
 import { Tasks } from "@/types/PlanGeneration";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -136,6 +137,14 @@ const CheckListItem = ({
         await toggleTask(task.id, nextValue).then(() => {});
       }
       onTaskToggle?.(task, nextValue);
+      // fire-and-forget analytics for task completion
+      if (nextValue === true && task?.id) {
+        void logEvent("task_completed", {
+          task_id: task.id,
+          title: task.title ?? null,
+          estimated_minutes: task.estimated_minutes ?? null,
+        });
+      }
     } catch (error) {
       console.error("Failed to toggle task", error);
     }
