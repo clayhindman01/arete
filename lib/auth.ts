@@ -34,6 +34,21 @@ export async function signOut() {
   if (error) throw error;
 }
 
+export async function resetPassword(email: string) {
+  const redirectTo =
+    process.env.EXPO_PUBLIC_PASSWORD_RESET_REDIRECT_URL ||
+    (typeof window !== "undefined"
+      ? `${window.location.origin}/ResetPassword`
+      : "arete://reset-password");
+
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
 export async function getCurrentUser() {
   const { data, error } = await supabase.auth.getUser();
 
@@ -55,7 +70,6 @@ export function useSession() {
   async function loadProfile(userId: string) {
     const {
       data: { user },
-      error: userError,
     } = await supabase.auth.getUser();
 
     const { data, error } = await supabase
