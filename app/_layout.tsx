@@ -24,7 +24,12 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <ProfileProvider>
-        <Stack screenOptions={{ headerShown: false }} />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            gestureEnabled: false,
+          }}
+        />
       </ProfileProvider>
     </ThemeProvider>
   );

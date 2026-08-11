@@ -31,7 +31,7 @@ export default function LoginScreen() {
   const logIn = () => {
     signIn(email, password)
       .then(() => {
-        router.push({
+        router.replace({
           pathname: "/(tabs)",
           params: {
             shouldShowIntro: "false",

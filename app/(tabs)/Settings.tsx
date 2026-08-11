@@ -12,7 +12,7 @@ export default function Settings() {
 
   const handleSignOutPress = () => {
     signOut().then(() => {
-      router.push({
+      router.replace({
         pathname: "/(auth)/Login",
         params: { shouldShowIntro: "false" },
       });
@@ -34,7 +34,7 @@ export default function Settings() {
           onPress: async () => {
             try {
               await deleteAccount();
-              router.push({
+              router.replace({
                 pathname: "/(auth)/Login",
                 params: { shouldShowIntro: "false" },
               });
