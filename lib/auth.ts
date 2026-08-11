@@ -34,6 +34,41 @@ export async function signOut() {
   if (error) throw error;
 }
 
+export async function deleteAccount() {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) throw userError;
+  if (!user) throw new Error("No authenticated user found.");
+
+  const { error } = await supabase.functions.invoke("delete-account");
+
+  if (error) {
+    const response = "context" in error && error.context ? error.context : null;
+
+    if (response && typeof response === "object" && "json" in response) {
+      try {
+        const payload = await response.clone().json();
+        if (payload && typeof payload === "object" && "error" in payload) {
+          throw new Error(String(payload.error));
+        }
+      } catch {
+        // Fall through to the original Supabase error object when no JSON payload is available.
+      }
+    }
+
+    throw error;
+  }
+
+  try {
+    await signOut();
+  } catch {
+    // Account deletion already invalidates the session; ignore cleanup errors.
+  }
+}
+
 export async function resetPassword(email: string) {
   const redirectTo =
     process.env.EXPO_PUBLIC_PASSWORD_RESET_REDIRECT_URL ||

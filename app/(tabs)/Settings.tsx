@@ -1,4 +1,4 @@
-import { signOut } from "@/lib/auth";
+import { deleteAccount, signOut } from "@/lib/auth";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
@@ -19,6 +19,38 @@ export default function Settings() {
     });
   };
 
+  const handleDeleteAccountPress = () => {
+    Alert.alert(
+      "Delete your account?",
+      "This action is permanent and will remove your account and saved data.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteAccount();
+              router.push({
+                pathname: "/(auth)/Login",
+                params: { shouldShowIntro: "false" },
+              });
+            } catch (error) {
+              console.error("Failed to delete account:", error);
+              Alert.alert(
+                "Unable to delete account",
+                "Please try again in a few moments.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <SafeAreaView
       style={{
@@ -29,7 +61,11 @@ export default function Settings() {
       <SettingsButton label="Manage Subscription" />
       <SettingsButton label="Create a New Goal" disabled={true} />
       <SettingsButton label="Sign Out" onPress={handleSignOutPress} />
-      <SettingsButton severity="critical" label="Delete Account" />
+      <SettingsButton
+        severity="critical"
+        label="Delete Account"
+        onPress={handleDeleteAccountPress}
+      />
     </SafeAreaView>
   );
 }
