@@ -4,14 +4,14 @@ import { signIn } from "@/lib/auth";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableWithoutFeedback,
-  View,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableWithoutFeedback,
+    View,
 } from "react-native";
 import { ErrorComponent, ErrorType, handleError } from "../../lib/auth.util";
 
@@ -31,7 +31,7 @@ export default function LoginScreen() {
   const logIn = () => {
     signIn(email, password)
       .then(() => {
-        router.push({
+        router.replace({
           pathname: "/(tabs)",
           params: {
             shouldShowIntro: "false",
@@ -83,6 +83,14 @@ export default function LoginScreen() {
             />
 
             {error && <ErrorComponent label={error.message} />}
+            {error ? (
+              <Text
+                style={styles.forgotPassword}
+                onPress={() => router.navigate("/(auth)/ResetPassword")}
+              >
+                Forgot your password?
+              </Text>
+            ) : null}
 
             <Button type="primary" onPress={logIn} label="Log In" />
             <View style={styles.dividerRow}>
@@ -187,6 +195,12 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: "#e2e8f0",
+  },
+  forgotPassword: {
+    color: "#93c5fd",
+    textAlign: "center",
+    marginBottom: 14,
+    textDecorationLine: "underline",
   },
   footer: {
     marginTop: 16,
