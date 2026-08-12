@@ -2,14 +2,18 @@ import { useTheme } from "@react-navigation/native";
 import { StyleSheet, Text, View } from "react-native";
 import Card from "../ui/Card";
 
-export default function InsightsTile({ aiSummary }: { aiSummary: string }) {
+export default function InsightsTile({
+  aiSummary,
+  title = "CHECK-IN RECAP",
+}: {
+  aiSummary: string;
+  title?: string;
+}) {
   const { colors } = useTheme();
   return (
     <Card>
       <View style={styles.headerContainer}>
-        <Text style={[styles.titleText, { color: colors.text }]}>
-          CHECK-IN RECAP
-        </Text>
+        <Text style={[styles.titleText, { color: colors.text }]}>{title}</Text>
       </View>
       <View
         style={{
@@ -46,7 +50,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   titleText: {
-    fontSize: 20,
+    fontSize: 16,
     color: "#F5F5F5",
     fontWeight: 600,
     letterSpacing: 1,

@@ -28,9 +28,30 @@ export default function TodaysPlan({
         <Text style={[styles.titleText, { color: "#A1A1AA" }]}>
           TODAY'S PLAN
         </Text>
-
-        {/* <Text style={[styles.titleSubText]}>{tasks.length} remaining</Text> */}
       </View>
+      {aiSummary && dailyCheckInComplete && (
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 5,
+            paddingLeft: 5,
+            paddingBottom: 5,
+          }}
+        >
+          <Text
+            style={{
+              color: "#A1A1AA",
+              letterSpacing: 1,
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            {aiSummary}
+          </Text>
+        </View>
+      )}
       {!dailyCheckInComplete && (
         <View
           style={{

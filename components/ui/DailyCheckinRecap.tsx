@@ -14,7 +14,6 @@ export default function DailyCheckinRecap({
   useEffect(() => {
     getCheckinData().then((res) => {
       setCheckinData(res);
-      console.log("checkin dtat", res);
     });
   }, []);
 

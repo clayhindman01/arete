@@ -126,7 +126,6 @@ export default function Dashboard() {
               completed: Boolean(task.completed),
             }),
           );
-          console.log("Normalized tasks", normalizedTasks);
 
           setTodaysTasks(normalizedTasks);
           setAiSummary(todaysPlan?.aiSummary ?? "");
@@ -230,7 +229,10 @@ export default function Dashboard() {
               />
             )}
             {/* {aiSummary && dailyCheckInComplete && (
-              <InsightsTile aiSummary={aiSummary} />
+              <InsightsTile
+                title="WHY YOUR PLAN CHANGED"
+                aiSummary={aiSummary}
+              />
             )} */}
             <HabitsStreaksLayout
               refreshKey={calendarRefreshKey}
