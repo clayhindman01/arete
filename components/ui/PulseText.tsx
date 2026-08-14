@@ -38,7 +38,7 @@ export default function PulseText({ onAnimationComplete }: PulseTextProps) {
       Animated.delay(1200),
       Animated.timing(fade, {
         toValue: 0,
-        duration: 500,
+        duration: 1000,
         useNativeDriver: true,
       }),
     ]).start(({ finished }) => {
@@ -78,7 +78,7 @@ export default function PulseText({ onAnimationComplete }: PulseTextProps) {
             },
           ]}
         >
-          RETE
+          SPYR
         </Animated.Text>
       </Animated.View>
     </View>
@@ -101,6 +101,7 @@ const styles = StyleSheet.create({
   logoWrap: {
     justifyContent: "center",
     alignItems: "center",
+    marginLeft: 50,
   },
   logo: {
     width: 75,
@@ -111,6 +112,6 @@ const styles = StyleSheet.create({
     fontSize: 56,
     fontWeight: "700",
     letterSpacing: 12,
-    marginLeft: 8,
+    marginLeft: 0,
   },
 });

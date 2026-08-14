@@ -14,7 +14,7 @@ export default function DailyProgress({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.label}>Daily Progress</Text>
+        {/* <Text style={styles.label}>Daily Progress</Text> */}
         <Text style={styles.value}>
           {completed}/{total}
         </Text>
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
 
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "center",
   },
 

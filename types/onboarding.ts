@@ -21,7 +21,10 @@ export interface OnboardingData {
 }
 
 export const GOAL_TIMELINE_OPTIONS = [
-  { label: "No timeline", value: "none" as GoalTimeline },
+  {
+    label: "No timeline",
+    value: "none" as GoalTimeline,
+  },
   { label: "30 days", value: "30days" as GoalTimeline },
   { label: "90 days", value: "90days" as GoalTimeline },
   { label: "6 months", value: "6months" as GoalTimeline },

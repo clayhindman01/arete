@@ -1,16 +1,11 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useTheme } from "@react-navigation/native";
-import { useRouter } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function Header({
   handleSettingsClick,
 }: {
   handleSettingsClick: () => void;
 }) {
-  const { colors } = useTheme();
-  const router = useRouter();
-
   const today = new Date();
 
   return (
@@ -22,19 +17,34 @@ export default function Header({
           alignItems: "center",
         }}
       >
-        <Text
+        <View
           style={{
-            lineHeight: 36,
-            fontWeight: "bold",
-            fontSize: 28,
-            // color: "#ebc27b",
-            color: "#A1A1AA",
-            letterSpacing: 8,
-            textAlign: "center",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            paddingBottom: 4,
           }}
         >
-          ARETE
-        </Text>
+          <Image
+            style={{ width: 30, height: 30 }}
+            source={require("../../assets/images/logo.png")}
+          />
+          <Text
+            style={{
+              lineHeight: 36,
+              fontWeight: "500",
+              fontSize: 28,
+              // color: "#ebc27b",
+              color: "#c7cbda",
+              letterSpacing: 8,
+              textAlign: "center",
+            }}
+          >
+            SPYR
+          </Text>
+        </View>
+
         <Text
           style={{
             color: "#A1A1AA",
@@ -71,7 +81,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 5,
   },
   text: {
     fontSize: 24,

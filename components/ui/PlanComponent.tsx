@@ -89,7 +89,9 @@ export default function PlanComponent({
                 task={task}
                 routine={routine}
                 // render grayed when unchecked, but keep in UI
-                checked={selection[rIndex] ? selection[rIndex][tIndex] ?? true : true}
+                checked={
+                  selection[rIndex] ? (selection[rIndex][tIndex] ?? true) : true
+                }
                 onToggle={() => handleToggle(rIndex, tIndex)}
               ></CheckListItem>
             </View>
@@ -179,7 +181,7 @@ const CheckListItem = ({
             letterSpacing: 1,
           }}
         >
-          Frequency: {" "}
+          Frequency:{" "}
           {routine.frequency === "daily"
             ? "Daily"
             : "Weekly on " +

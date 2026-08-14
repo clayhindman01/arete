@@ -421,13 +421,6 @@ export async function hasCompletedDailyCheckInToday() {
   const endOfDay = new Date();
   endOfDay.setHours(23, 59, 59, 999);
 
-  console.log(
-    "Checking daily check-in for user:",
-    user.id,
-    startOfDay.toISOString(),
-    endOfDay.toISOString(),
-  );
-
   const { data, error } = await supabase
     .from("check_ins")
     .select("id")

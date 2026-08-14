@@ -25,7 +25,7 @@ export default function TextField({
         placeholder={placeholder}
         placeholderTextColor="#64748b"
         multiline={true}
-        numberOfLines={5}
+        numberOfLines={7}
         keyboardType={keyboardType}
       />
       {error && <Text style={styles.errorText}>{error}</Text>}

@@ -147,10 +147,6 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    // hasCompletedDailyCheckInToday().then((completed) => {
-    //   setDailyCheckInComplete(completed);
-    // });
-    // fetchActivePlan();
     setNotification();
   }, []);
 
@@ -163,7 +159,6 @@ export default function Dashboard() {
   useFocusEffect(
     useCallback(() => {
       hasCompletedDailyCheckInToday().then((completed) => {
-        console.log("Daily check-in completed:", completed);
         setDailyCheckInComplete(completed);
       });
       fetchActivePlan().then(() => setIsLoading(false));
@@ -208,7 +203,7 @@ export default function Dashboard() {
         <Header handleSettingsClick={() => handleMenuClick("settings")} />
         <DailyProgress completed={completedTasks} total={todaysTasks.length} />
         <ScrollView style={{ marginBottom: -35 }}>
-          <View style={{ padding: 5, paddingVertical: 10, marginBottom: 15 }}>
+          <View style={{ padding: 5, paddingVertical: 5, marginBottom: 20 }}>
             {dailyCheckInComplete && completedTasks === todaysTasks.length && (
               <EverythingCompletedTile />
             )}
@@ -216,14 +211,15 @@ export default function Dashboard() {
               <Text
                 style={{
                   color: "#A1A1AA",
-                  fontSize: 16,
-                  fontWeight: 500,
-                  textAlign: "center",
-                  paddingBottom: 5,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  lineHeight: 20,
                   letterSpacing: 2,
+                  textAlign: "center",
+                  textTransform: "uppercase",
                 }}
               >
-                Goal: {goal}.
+                {goal}
               </Text>
             </Card>
             {isWeeklyReportAvailable && !weeklyReportComplete && (

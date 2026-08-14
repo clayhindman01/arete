@@ -16,7 +16,7 @@ import {
   AVAILABLE_TIME_OPTIONS,
   GOAL_TIMELINE_OPTIONS,
 } from "@/types/onboarding";
-import { PlanGeneration, Commitments } from "@/types/PlanGeneration";
+import { Commitments, PlanGeneration } from "@/types/PlanGeneration";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -125,9 +125,15 @@ export default function Onboarding() {
     const totalSelectedTasks = planData.commitments.reduce((acc, c, ci) => {
       const selForCommitment = selections[ci];
       if (!selForCommitment) {
-        return acc + c.routines.reduce((a, r) => a + (r.tasks ? r.tasks.length : 0), 0);
+        return (
+          acc +
+          c.routines.reduce((a, r) => a + (r.tasks ? r.tasks.length : 0), 0)
+        );
       }
-      const count = selForCommitment.reduce((ra, row) => ra + row.filter(Boolean).length, 0);
+      const count = selForCommitment.reduce(
+        (ra, row) => ra + row.filter(Boolean).length,
+        0,
+      );
       return acc + count;
     }, 0);
 
@@ -147,7 +153,8 @@ export default function Onboarding() {
           if (!selForCommitment) return c;
           const routines = c.routines
             .map((r, ri) => {
-              const taskSelectionRow = selForCommitment[ri] ?? r.tasks.map(() => true);
+              const taskSelectionRow =
+                selForCommitment[ri] ?? r.tasks.map(() => true);
               const tasks = r.tasks.filter((t, ti) => taskSelectionRow[ti]);
               return { ...r, tasks };
             })
@@ -206,7 +213,9 @@ export default function Onboarding() {
 
           {currentStep === 2 && (
             <View>
-              <Text style={styles.stepTitle}>WHAT IS YOUR GOAL?</Text>
+              <Text style={styles.stepTitle}>
+                WHAT IS A GOAL YOU'D LIKE TO MAKE PROGRESS ON?
+              </Text>
               <TextField
                 placeholder="Describe your goal"
                 value={formData.goal}
@@ -222,7 +231,7 @@ export default function Onboarding() {
           {currentStep === 3 && (
             <View>
               <Text style={styles.stepTitle}>
-                IS THERE A TIMELINE FOR YOUR GOAL?
+                IS THERE A TIMELINE FOR ACHIEVING YOUR GOAL?
               </Text>
               <ButtonGroup
                 options={GOAL_TIMELINE_OPTIONS}
@@ -241,7 +250,9 @@ export default function Onboarding() {
 
           {currentStep === 4 && (
             <View>
-              <Text style={styles.stepTitle}>WHERE ARE YOU STARTING AT?</Text>
+              <Text style={styles.stepTitle}>
+                DESCRIBE YOUR CURRENT PROGRESS ON THIS GOAL
+              </Text>
               <Text style={styles.subText}>
                 (The more details you include the more accurate your plan will
                 be)
@@ -283,8 +294,14 @@ export default function Onboarding() {
             (planData ? (
               <View>
                 <Text style={styles.stepTitle}>EDIT PLAN</Text>
-                <Text style={styles.goalText}>{planData.goal.title}</Text>
-                <Text style={styles.subText}>{planData.goal.description}</Text>
+                {/* <Text style={styles.goalText}>{planData.goal.title}</Text> */}
+                <Text style={styles.goalText}>
+                  De-select tasks that you do not think would be benefitial to
+                  help you reach your goal.
+                </Text>
+                <Text style={styles.subText}>
+                  This is your plan, so make it work for you!
+                </Text>
                 {planData?.commitments.map((commitment, index) => (
                   <PlanComponent
                     key={index}
@@ -324,9 +341,18 @@ export default function Onboarding() {
                   planData.commitments.reduce((acc, c, ci) => {
                     const selForCommitment = selections[ci];
                     if (!selForCommitment) {
-                      return acc + c.routines.reduce((a, r) => a + (r.tasks ? r.tasks.length : 0), 0);
+                      return (
+                        acc +
+                        c.routines.reduce(
+                          (a, r) => a + (r.tasks ? r.tasks.length : 0),
+                          0,
+                        )
+                      );
                     }
-                    const count = selForCommitment.reduce((ra, row) => ra + row.filter(Boolean).length, 0);
+                    const count = selForCommitment.reduce(
+                      (ra, row) => ra + row.filter(Boolean).length,
+                      0,
+                    );
                     return acc + count;
                   }, 0) === 0
                 }
@@ -370,6 +396,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#ecedee",
     fontWeight: "600",
+    marginTop: -18,
     marginBottom: 24,
   },
   subText: {

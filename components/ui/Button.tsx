@@ -29,8 +29,8 @@ export default function Button({
         disabled
           ? styles.disabledButton
           : type === "primary"
-          ? styles.primaryButton
-          : styles.secondaryButton
+            ? styles.primaryButton
+            : styles.secondaryButton
       }
       onPress={handlePress}
       disabled={disabled}
@@ -40,8 +40,8 @@ export default function Button({
           disabled
             ? styles.disabledButtonText
             : type === "primary"
-            ? styles.primaryButtonText
-            : styles.secondaryButtonText
+              ? styles.primaryButtonText
+              : styles.secondaryButtonText
         }
       >
         {label}
