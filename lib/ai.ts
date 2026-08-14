@@ -8,17 +8,43 @@ export async function generatePlan(input: OnboardingData) {
   try {
     return callModelWithRetry(
       async () => {
-        const { data, error } = await supabase.functions.invoke("generate-ai", {
-          body: {
-            prompt: buildUserPlanPrompt(input),
-            systemInstruction: ARETE_SYSTEM_PROMPT,
-          },
-        });
+        try {
+          const { data, error } = await supabase.functions.invoke(
+            "generate-ai",
+            {
+              body: {
+                prompt: buildUserPlanPrompt(input),
+                systemInstruction: ARETE_SYSTEM_PROMPT,
+              },
+            },
+          );
 
-        if (error) {
-          throw error;
+          if (error) {
+            throw error;
+          }
+
+          return data;
+        } catch (err: any) {
+          const resp =
+            err?.response || err?.context || err?.cause?.response || null;
+          if (resp && typeof resp.json === "function") {
+            try {
+              const payload = await resp.json();
+              throw new Error(
+                `Edge function error: ${JSON.stringify(payload)}`,
+              );
+            } catch {
+              try {
+                const text = await resp.text();
+                throw new Error(`Edge function error: ${text}`);
+              } catch {
+                // fallthrough to original error
+              }
+            }
+          }
+
+          throw err;
         }
-        return data;
       },
 
       // const response = data.text;
@@ -72,20 +98,41 @@ export async function generateAdaptiveDailyPlan({
 }: AdaptivePlanInput) {
   return callModelWithRetry(
     async () => {
-      const { data, error } = await supabase.functions.invoke("generate-ai", {
-        body: {
-          prompt: JSON.stringify({
-            current_tasks: tasks,
-            check_in: checkIn,
-          }),
-          systemInstruction: ADAPTIVE_PLAN_SYSTEM_PROMPT,
-        },
-      });
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-ai", {
+          body: {
+            prompt: JSON.stringify({
+              current_tasks: tasks,
+              check_in: checkIn,
+            }),
+            systemInstruction: ADAPTIVE_PLAN_SYSTEM_PROMPT,
+          },
+        });
 
-      if (error) {
-        throw error;
+        if (error) {
+          throw error;
+        }
+
+        return data;
+      } catch (err: any) {
+        const resp =
+          err?.response || err?.context || err?.cause?.response || null;
+        if (resp && typeof resp.json === "function") {
+          try {
+            const payload = await resp.json();
+            throw new Error(`Edge function error: ${JSON.stringify(payload)}`);
+          } catch {
+            try {
+              const text = await resp.text();
+              throw new Error(`Edge function error: ${text}`);
+            } catch {
+              // fallthrough to original error
+            }
+          }
+        }
+
+        throw err;
       }
-      return data;
     },
 
     // return callModelWithRetry(() =>

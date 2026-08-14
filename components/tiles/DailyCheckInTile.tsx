@@ -26,7 +26,6 @@ export default function DailyCheckInTile({
         isDailyCheckInComplete: dailyCheckInComplete ? "true" : "false",
       },
     });
-    setDailyCheckInComplete(true);
   };
 
   return (

@@ -43,23 +43,45 @@ export async function deleteAccount() {
   if (userError) throw userError;
   if (!user) throw new Error("No authenticated user found.");
 
-  const { error } = await supabase.functions.invoke("delete-account");
+  try {
+    const { data, error } = await supabase.functions.invoke("delete-account");
 
-  if (error) {
-    const response = "context" in error && error.context ? error.context : null;
+    if (error) {
+      const response =
+        "context" in error && error.context ? error.context : null;
 
-    if (response && typeof response === "object" && "json" in response) {
+      if (response && typeof response === "object" && "json" in response) {
+        try {
+          const payload = await response.clone().json();
+          if (payload && typeof payload === "object" && "error" in payload) {
+            throw new Error(String(payload.error));
+          }
+        } catch {
+          // Fall through to the original Supabase error object when no JSON payload is available.
+        }
+      }
+
+      throw error;
+    }
+  } catch (err: any) {
+    const resp = err?.response || err?.context || err?.cause?.response || null;
+    if (resp && typeof resp.json === "function") {
       try {
-        const payload = await response.clone().json();
+        const payload = await resp.json();
         if (payload && typeof payload === "object" && "error" in payload) {
           throw new Error(String(payload.error));
         }
       } catch {
-        // Fall through to the original Supabase error object when no JSON payload is available.
+        try {
+          const text = await resp.text();
+          throw new Error(`Edge function error: ${text}`);
+        } catch {
+          // fallthrough
+        }
       }
     }
 
-    throw error;
+    throw err;
   }
 
   try {

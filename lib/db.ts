@@ -6,7 +6,10 @@ import {
   Tasks,
 } from "@/types/PlanGeneration";
 import { supabase } from "./supabase";
-import { getCurrentDateWithTimezoneOffset } from "./utils";
+import {
+  getCurrentDateTimeWithTimezoneOffset,
+  getCurrentDateWithTimezoneOffset,
+} from "./utils";
 
 export async function getProfile() {
   const { data, error } = await supabase.from("profiles").select("*").single();
@@ -418,6 +421,13 @@ export async function hasCompletedDailyCheckInToday() {
   const endOfDay = new Date();
   endOfDay.setHours(23, 59, 59, 999);
 
+  console.log(
+    "Checking daily check-in for user:",
+    user.id,
+    startOfDay.toISOString(),
+    endOfDay.toISOString(),
+  );
+
   const { data, error } = await supabase
     .from("check_ins")
     .select("id")
@@ -450,7 +460,7 @@ export async function createDailyCheckIn(checkIn: CheckInValue) {
       available_time: checkIn.availableTime,
       notes: checkIn.todaysImpediments ?? null,
 
-      created_at: getCurrentDateWithTimezoneOffset(),
+      created_at: getCurrentDateTimeWithTimezoneOffset(),
     })
     .select()
     .single();

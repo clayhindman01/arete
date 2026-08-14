@@ -43,8 +43,9 @@ export default function Dashboard() {
   const [isWeeklyReportAvailable, setIsWeeklyReportAvailable] =
     useState<boolean>(false);
   const [aiSummary, setAiSummary] = useState<string>("");
-  const { shouldShowIntro } = useLocalSearchParams<{
+  const { shouldShowIntro, dailyCheckInCompleted } = useLocalSearchParams<{
     shouldShowIntro: string;
+    dailyCheckInCompleted?: string;
   }>();
   const [showIntro, setShowIntro] = useState<string>(
     shouldShowIntro === undefined ? "true" : shouldShowIntro,
@@ -146,15 +147,25 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    hasCompletedDailyCheckInToday().then((completed) => {
-      setDailyCheckInComplete(completed);
-    });
-    fetchActivePlan();
+    // hasCompletedDailyCheckInToday().then((completed) => {
+    //   setDailyCheckInComplete(completed);
+    // });
+    // fetchActivePlan();
     setNotification();
   }, []);
 
+  useEffect(() => {
+    if (dailyCheckInCompleted === "true") {
+      setDailyCheckInComplete(true);
+    }
+  }, [dailyCheckInCompleted]);
+
   useFocusEffect(
     useCallback(() => {
+      hasCompletedDailyCheckInToday().then((completed) => {
+        console.log("Daily check-in completed:", completed);
+        setDailyCheckInComplete(completed);
+      });
       fetchActivePlan().then(() => setIsLoading(false));
     }, []),
   );

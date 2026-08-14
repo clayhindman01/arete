@@ -63,7 +63,6 @@ export default function CheckIn() {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  console.log("todaysTasks in CheckIn.tsx", params.todaysTasks);
   const router = useRouter();
 
   async function submitCheckIn(checkIn: any) {
@@ -82,8 +81,11 @@ export default function CheckIn() {
       })
       .then(() => {
         setCurrentStep(1);
-        router.back();
         setIsLoading(false);
+        router.replace({
+          pathname: "/(tabs)",
+          params: { dailyCheckInCompleted: "true" },
+        });
       });
   }
 
