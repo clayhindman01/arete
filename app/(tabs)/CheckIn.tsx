@@ -21,13 +21,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type StepType = 1 | 2 | 3 | 4;
-type YesterdayDifficulty =
+export type YesterdayDifficulty =
   | "very-easy"
   | "easy"
   | "about-right"
   | "difficult"
   | "very-difficult";
-type EnergyScale = 1 | 2 | 3 | 4 | 5;
+export type EnergyScale = 1 | 2 | 3 | 4 | 5;
 
 export const YESTERDAY_DIFFICULTY_OPTIONS = [
   { label: "Very Easy", value: "very-easy" as YesterdayDifficulty },

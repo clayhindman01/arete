@@ -1,13 +1,12 @@
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
 import { useSession } from "@/lib/auth";
 import { getProfile } from "@/lib/db";
 
 export default function Index() {
   const { session, loading } = useSession();
-  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [profile, setProfile] = useState<{
     onboarding_complete: boolean;
@@ -25,15 +24,13 @@ export default function Index() {
         setProfile(profile);
       } catch (error) {
         console.error("Failed to load profile:", error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
     loadProfile();
   }, [session]);
 
-  if (loading || isLoading) {
+  if (loading) {
     return (
       <View
         style={{
@@ -43,7 +40,7 @@ export default function Index() {
           backgroundColor: "#09090B",
         }}
       >
-        {/* <ActivityIndicator size="large" color="whi  te" /> */}
+        <ActivityIndicator size="large" color="white" />
       </View>
     );
   }

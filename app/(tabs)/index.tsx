@@ -3,7 +3,6 @@ import HabitsStreaksLayout from "@/components/HabitsStreaksLayout";
 import DailyCheckInTile from "@/components/tiles/DailyCheckInTile";
 import EverythingCompletedTile from "@/components/tiles/EverythingCompletedTile";
 import TodaysPlan from "@/components/tiles/TodaysPlan";
-import WeeklyReportTile from "@/components/tiles/WeeklyReportTile";
 import Card from "@/components/ui/Card";
 import DailyCheckinRecap from "@/components/ui/DailyCheckinRecap";
 import Header from "@/components/ui/Header";
@@ -26,7 +25,7 @@ import { getCurrentDateWithTimezoneOffset } from "@/lib/utils";
 import { Tasks } from "@/types/PlanGeneration";
 import * as Notifications from "expo-notifications";
 import { Redirect, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Settings from "./Settings";
@@ -38,19 +37,13 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [dailyCheckInComplete, setDailyCheckInComplete] =
     useState<boolean>(false);
-  const [weeklyReportComplete, setWeeklyReportComplete] =
-    useState<boolean>(false);
-  const [isWeeklyReportAvailable, setIsWeeklyReportAvailable] =
-    useState<boolean>(false);
+
   const [aiSummary, setAiSummary] = useState<string>("");
   const { shouldShowIntro, dailyCheckInCompleted } = useLocalSearchParams<{
     shouldShowIntro: string;
     dailyCheckInCompleted?: string;
   }>();
-  const [showIntro, setShowIntro] = useState<string>(
-    shouldShowIntro === undefined ? "true" : shouldShowIntro,
-  );
-
+  const [completedTasks, setCompletedTasks] = useState<number>(0);
   const [latentPlan, setLatentPlan] = useState<any | null>(null);
   const [goal, setGoal] = useState<string | null>(null);
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
@@ -59,6 +52,8 @@ export default function Dashboard() {
   >({});
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [selectedMenu, setSelectedMenu] = useState<MenuOption>();
+
+  const showIntro = shouldShowIntro === undefined ? "true" : shouldShowIntro;
 
   const deriveCalendarStatus = (tasks: Tasks[] | null | undefined) => {
     if (!tasks || tasks.length === 0) {
@@ -158,6 +153,7 @@ export default function Dashboard() {
 
   useFocusEffect(
     useCallback(() => {
+      setIsLoading(true);
       hasCompletedDailyCheckInToday().then((completed) => {
         setDailyCheckInComplete(completed);
       });
@@ -166,15 +162,18 @@ export default function Dashboard() {
   );
 
   useEffect(() => {
+    setCompletedTasks(todaysTasks.filter((task) => task.completed).length);
     if (todaysTasks.length === completedTasks && todaysTasks.length > 0) {
       cancelCompletionReminder();
     }
   }, [todaysTasks]);
 
-  const completedTasks = useMemo(
-    () => todaysTasks.filter((task) => task.completed).length,
-    [todaysTasks],
-  );
+  // const completedTasks = useMemo(
+  //   () => todaysTasks.filter((task) => task.completed).length,
+  //   [todaysTasks],
+  // );
+
+  console.log("todaysTasks", todaysTasks, "completedTasks", completedTasks);
 
   const renderMenuComponent = () => {
     switch (selectedMenu) {
@@ -222,12 +221,6 @@ export default function Dashboard() {
                 {goal}
               </Text>
             </Card>
-            {isWeeklyReportAvailable && !weeklyReportComplete && (
-              <WeeklyReportTile
-                weeklyReportComplete={weeklyReportComplete}
-                setWeeklyReportComplete={setWeeklyReportComplete}
-              />
-            )}
             {!dailyCheckInComplete && (
               <DailyCheckInTile
                 dailyCheckInComplete={dailyCheckInComplete}
@@ -279,12 +272,6 @@ export default function Dashboard() {
                 setDailyCheckInComplete={setDailyCheckInComplete}
                 todaysTasks={todaysTasks}
                 handleDailyCheckinMenuPress={() => handleMenuClick("checkin")}
-              />
-            )}
-            {isWeeklyReportAvailable && weeklyReportComplete && (
-              <WeeklyReportTile
-                weeklyReportComplete={weeklyReportComplete}
-                setWeeklyReportComplete={setWeeklyReportComplete}
               />
             )}
             <SlideUpMenu

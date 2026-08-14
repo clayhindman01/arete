@@ -34,9 +34,11 @@ export default function Header({
             style={{
               lineHeight: 36,
               fontWeight: "500",
-              fontSize: 28,
+              fontSize: 32,
               // color: "#ebc27b",
               color: "#c7cbda",
+              marginBottom: -10,
+              paddingBottom: 4,
               letterSpacing: 8,
               textAlign: "center",
             }}
@@ -65,11 +67,10 @@ export default function Header({
       </View>
 
       <TouchableOpacity
-        // onPress={() => router.navigate("/(tabs)/Settings")}
         onPress={handleSettingsClick}
         style={{ position: "absolute", right: 15, top: 15 }}
       >
-        <MaterialIcons name="settings" color="#A1A1AA" size={22} />
+        <MaterialIcons name="settings" color="#A1A1AA" size={24} />
       </TouchableOpacity>
     </View>
   );

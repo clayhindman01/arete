@@ -30,10 +30,12 @@ export default function SignupScreen() {
           message: "Passwords do not match.",
         }),
       );
+    } else {
+      setError(null);
+      signUp(email, password).then(() =>
+        router.navigate("/(onboarding)/Onboarding"),
+      );
     }
-    signUp(email, password).then(() =>
-      router.navigate("/(onboarding)/Onboarding"),
-    );
   };
 
   return (

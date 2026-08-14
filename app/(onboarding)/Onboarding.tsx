@@ -182,8 +182,6 @@ export default function Onboarding() {
     });
   };
 
-  // console.log(planData);
-
   if (isLoading) return <Loader />;
 
   return (
