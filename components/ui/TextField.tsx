@@ -24,6 +24,7 @@ export default function TextField({
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor="#64748b"
+        multiline={true}
         numberOfLines={5}
         keyboardType={keyboardType}
       />

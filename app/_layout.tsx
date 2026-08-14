@@ -6,8 +6,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { ProfileProvider } from "@/lib/ProfileContext";
 import {
   DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
+  ThemeProvider
 } from "@react-navigation/native";
 
 export default function RootLayout() {
@@ -22,7 +21,7 @@ export default function RootLayout() {
   });
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DarkTheme}>
       <ProfileProvider>
         <Stack
           screenOptions={{

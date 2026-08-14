@@ -7,7 +7,6 @@ import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Settings() {
-  const { colors } = useTheme();
   const router = useRouter();
 
   const handleSignOutPress = () => {
@@ -51,6 +50,13 @@ export default function Settings() {
     );
   };
 
+  const handleNoFeaturePress = () => {
+    Alert.alert(
+      "This feature is under development",
+      "Please check back later.",
+    );
+  };
+
   return (
     <SafeAreaView
       style={{
@@ -58,8 +64,14 @@ export default function Settings() {
         paddingTop: 10,
       }}
     >
-      <SettingsButton label="Manage Subscription" />
-      <SettingsButton label="Create a New Goal" disabled={true} />
+      <SettingsButton
+        label="Manage Subscription"
+        onPress={handleNoFeaturePress}
+      />
+      <SettingsButton
+        label="Create a New Goal"
+        onPress={handleNoFeaturePress}
+      />
       <SettingsButton label="Sign Out" onPress={handleSignOutPress} />
       <SettingsButton
         severity="critical"

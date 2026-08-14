@@ -6,6 +6,7 @@ import {
   Tasks,
 } from "@/types/PlanGeneration";
 import { supabase } from "./supabase";
+import { getCurrentDateWithTimezoneOffset } from "./utils";
 
 export async function getProfile() {
   const { data, error } = await supabase.from("profiles").select("*").single();
@@ -175,10 +176,6 @@ function getToday() {
   return DAY_MAP[new Date().getDay()];
 }
 
-function getCurrentDate() {
-  return new Date().toISOString().split("T")[0];
-}
-
 type LatentTask = Tasks & {
   commitment_title: string;
   routine_title: string;
@@ -188,7 +185,7 @@ type LatentTask = Tasks & {
 
 export async function createOrUpdateLatentPlan(planJson: any) {
   const user = await getUser();
-  const today = new Date().toISOString().split("T")[0];
+  const today = getCurrentDateWithTimezoneOffset();
 
   // 1. Build latent weekly pool
   const weeklyTaskPool = planJson.commitments.flatMap(
@@ -233,6 +230,8 @@ export async function getOrCreatePreCheckinDailyPlan(
   weeklyTaskPool: LatentTask[],
 ) {
   const today = getToday();
+  const localISOTime = getCurrentDateWithTimezoneOffset();
+
   const user = await getUser();
 
   const { data: existingPlan } = await supabase
@@ -256,7 +255,7 @@ export async function getOrCreatePreCheckinDailyPlan(
   `,
     )
     .eq("user_id", user.id)
-    .eq("plan_date", new Date().toISOString().split("T")[0])
+    .eq("plan_date", localISOTime)
     .eq("is_current", true)
     .maybeSingle();
 
@@ -303,7 +302,7 @@ export async function getOrCreatePreCheckinDailyPlan(
 
   const { data: plan, error } = await supabase.rpc("create_daily_plan", {
     p_user_id: user.id,
-    p_plan_date: getCurrentDate(),
+    p_plan_date: getCurrentDateWithTimezoneOffset(),
     p_ai_summary: "Draft plan generated from latent pool (pre check-in)",
   });
 
@@ -337,7 +336,7 @@ export async function toggleTask(taskId: string, completed: boolean) {
     .from("daily_tasks")
     .update({
       completed,
-      completed_at: completed ? new Date().toISOString() : null,
+      completed_at: completed ? getCurrentDateWithTimezoneOffset() : null,
     })
     .eq("id", taskId)
     .select()
@@ -359,7 +358,7 @@ export async function saveAdaptiveDailyPlan(
     .from("daily_plans")
     .select("id")
     .eq("user_id", userId)
-    .eq("plan_date", new Date().toISOString().split("T")[0])
+    .eq("plan_date", getCurrentDateWithTimezoneOffset())
     .eq("is_current", true)
     .single();
 
@@ -380,7 +379,7 @@ export async function saveAdaptiveDailyPlan(
       user_id: userId,
       is_current: true,
       ai_summary: aiPlan.summary,
-      plan_date: new Date().toISOString().split("T")[0],
+      plan_date: getCurrentDateWithTimezoneOffset(),
     })
     .select()
     .single();
@@ -396,7 +395,7 @@ export async function saveAdaptiveDailyPlan(
       description: task.description,
       estimated_minutes: task.estimated_minutes,
       completed: task.completed ?? false,
-      completed_at: task.completed ? new Date().toISOString() : null,
+      completed_at: task.completed ? getCurrentDateWithTimezoneOffset() : null,
       sort_order: index,
     })),
   );
@@ -451,7 +450,7 @@ export async function createDailyCheckIn(checkIn: CheckInValue) {
       available_time: checkIn.availableTime,
       notes: checkIn.todaysImpediments ?? null,
 
-      created_at: new Date().toISOString(),
+      created_at: getCurrentDateWithTimezoneOffset(),
     })
     .select()
     .single();

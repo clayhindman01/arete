@@ -22,6 +22,7 @@ import {
   cancelCompletionReminder,
   scheduleDailyNotifications,
 } from "@/lib/scheduleNotifications";
+import { getCurrentDateWithTimezoneOffset } from "@/lib/utils";
 import { Tasks } from "@/types/PlanGeneration";
 import * as Notifications from "expo-notifications";
 import { Redirect, useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -252,7 +253,7 @@ export default function Dashboard() {
                       : currentTask,
                   );
 
-                  const todayKey = new Date().toISOString().split("T")[0];
+                  const todayKey = getCurrentDateWithTimezoneOffset();
                   setCalendarStatusOverrides((previousOverrides) => ({
                     ...previousOverrides,
                     [todayKey]: deriveCalendarStatus(nextTasks),

@@ -2,21 +2,40 @@ import { ARETE_SYSTEM_PROMPT } from "@/prompts/arete-system-prompt";
 import { ADAPTIVE_PLAN_SYSTEM_PROMPT } from "@/prompts/daily-checkin-plan-adaption";
 import { buildUserPlanPrompt } from "@/prompts/prompt-utils";
 import { OnboardingData } from "@/types/onboarding";
-import { GoogleGenAI } from "@google/genai";
-
-const ai = new GoogleGenAI({ apiKey: process.env.EXPO_PUBLIC_GEMINI_KEY });
+import { supabase } from "./supabase";
 
 export async function generatePlan(input: OnboardingData) {
-  return callModelWithRetry(() =>
-    ai.models.generateContent({
-      model: "gemini-3.1-flash-lite",
-      config: {
-        systemInstruction: ARETE_SYSTEM_PROMPT,
-        responseMimeType: "application/json",
+  try {
+    return callModelWithRetry(
+      async () => {
+        const { data, error } = await supabase.functions.invoke("generate-ai", {
+          body: {
+            prompt: buildUserPlanPrompt(input),
+            systemInstruction: ARETE_SYSTEM_PROMPT,
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
+        return data;
       },
-      contents: buildUserPlanPrompt(input) as any,
-    }),
-  );
+
+      // const response = data.text;
+      //   }
+      //     ai.models.generateContent({
+      //       model: "gemini-3.1-flash-lite",
+      //       config: {
+      //         systemInstruction: ARETE_SYSTEM_PROMPT,
+      //         responseMimeType: "application/json",
+      //       },
+      //       contents: buildUserPlanPrompt(input) as any,
+      //     }),
+    );
+  } catch (error) {
+    console.error("Error generating plan:", error);
+    throw error;
+  }
 }
 
 async function callModelWithRetry(fn: () => Promise<any>, maxRetries = 5) {
@@ -51,20 +70,36 @@ export async function generateAdaptiveDailyPlan({
   tasks,
   checkIn,
 }: AdaptivePlanInput) {
+  return callModelWithRetry(
+    async () => {
+      const { data, error } = await supabase.functions.invoke("generate-ai", {
+        body: {
+          prompt: JSON.stringify({
+            current_tasks: tasks,
+            check_in: checkIn,
+          }),
+          systemInstruction: ADAPTIVE_PLAN_SYSTEM_PROMPT,
+        },
+      });
 
-  return callModelWithRetry(() =>
-    ai.models.generateContent({
-      model: "gemini-3.1-flash-lite",
-      config: {
-        systemInstruction: ADAPTIVE_PLAN_SYSTEM_PROMPT,
-        responseMimeType: "application/json",
-      },
-      contents: JSON.stringify({
-        current_tasks: tasks,
-        check_in: checkIn,
-      }),
-    }),
+      if (error) {
+        throw error;
+      }
+      return data;
+    },
+
+    // return callModelWithRetry(() =>
+    //   ai.models.generateContent({
+    //     model: "gemini-3.1-flash-lite",
+    //     config: {
+    //       systemInstruction: ADAPTIVE_PLAN_SYSTEM_PROMPT,
+    //       responseMimeType: "application/json",
+    //     },
+    //     contents: JSON.stringify({
+    //       current_tasks: tasks,
+    //       check_in: checkIn,
+    //     }),
+    //   }),
+    // );
   );
-
-
 }

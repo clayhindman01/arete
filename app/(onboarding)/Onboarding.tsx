@@ -8,24 +8,25 @@ import { logEvent } from "@/lib/analytics";
 import { completeOnboarding, saveGeneratedPlan } from "@/lib/db";
 import { useProfile } from "@/lib/ProfileContext";
 import type {
-    AvailableTime,
-    GoalTimeline,
-    OnboardingData,
+  AvailableTime,
+  GoalTimeline,
+  OnboardingData,
 } from "@/types/onboarding";
 import {
-    AVAILABLE_TIME_OPTIONS,
-    GOAL_TIMELINE_OPTIONS,
+  AVAILABLE_TIME_OPTIONS,
+  GOAL_TIMELINE_OPTIONS,
 } from "@/types/onboarding";
 import { PlanGeneration } from "@/types/PlanGeneration";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -146,7 +147,10 @@ export default function Onboarding() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
-        <View style={styles.content}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          scrollEnabled={currentStep === 6}
+        >
           {currentStep === 1 && (
             <View>
               <Text style={styles.stepTitle}>What should I call you?</Text>
@@ -268,7 +272,7 @@ export default function Onboarding() {
               />
             </View>
           )}
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
