@@ -7,6 +7,7 @@ type ButtonProps = {
   type: "primary" | "secondary";
   children?: ReactNode;
   onPress?: () => void;
+  disabled?: boolean;
 };
 
 export default function Button({
@@ -14,17 +15,31 @@ export default function Button({
   type,
   children,
   onPress = () => null,
+  disabled = false,
 }: ButtonProps) {
   const router = useRouter();
+  const handlePress = () => {
+    if (disabled) return;
+    onPress && onPress();
+  };
 
   return (
     <TouchableOpacity
-      style={type === "primary" ? styles.primaryButton : styles.secondaryButton}
-      onPress={onPress}
+      style={
+        disabled
+          ? styles.disabledButton
+          : type === "primary"
+          ? styles.primaryButton
+          : styles.secondaryButton
+      }
+      onPress={handlePress}
+      disabled={disabled}
     >
       <Text
         style={
-          type === "primary"
+          disabled
+            ? styles.disabledButtonText
+            : type === "primary"
             ? styles.primaryButtonText
             : styles.secondaryButtonText
         }
@@ -59,6 +74,20 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: "#e2e8f0",
+    fontSize: 16,
+    fontWeight: "600",
+    letterSpacing: 1,
+    lineHeight: 25,
+  },
+  disabledButton: {
+    backgroundColor: "#6b6b6b",
+    padding: 14,
+    borderRadius: 10,
+    alignItems: "center",
+    opacity: 0.7,
+  },
+  disabledButtonText: {
+    color: "#d1d1d1",
     fontSize: 16,
     fontWeight: "600",
     letterSpacing: 1,

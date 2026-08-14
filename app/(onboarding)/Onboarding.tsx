@@ -16,7 +16,7 @@ import {
   AVAILABLE_TIME_OPTIONS,
   GOAL_TIMELINE_OPTIONS,
 } from "@/types/onboarding";
-import { PlanGeneration } from "@/types/PlanGeneration";
+import { PlanGeneration, Commitments } from "@/types/PlanGeneration";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -46,6 +46,8 @@ export default function Onboarding() {
     Partial<Record<keyof OnboardingData, string>>
   >({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [selections, setSelections] = useState<Record<number, boolean[][]>>({});
 
   const validateStep = (step: number): boolean => {
     const newErrors: typeof errors = {};
@@ -117,27 +119,63 @@ export default function Onboarding() {
   };
 
   const handleComplete = () => {
-    if (profile && planData) {
-      setIsLoading(true);
-      // Update profile to mark onboarding complete
-      saveGeneratedPlan(profile.id, planData).then(() => {
-        completeOnboarding().then(async () => {
-          // non-blocking analytics
-          void logEvent(
-            "onboarding_completed",
-            { plan_created: true },
-            profile.id,
-          );
-          await refreshProfile();
-          router.replace("/(tabs)");
-          router.push({
-            pathname: "/(tabs)",
-            params: { shouldShowIntro: "false" },
-          });
+    if (!profile || !planData) return;
+
+    // compute total selected tasks from selections (fallback to all selected)
+    const totalSelectedTasks = planData.commitments.reduce((acc, c, ci) => {
+      const selForCommitment = selections[ci];
+      if (!selForCommitment) {
+        return acc + c.routines.reduce((a, r) => a + (r.tasks ? r.tasks.length : 0), 0);
+      }
+      const count = selForCommitment.reduce((ra, row) => ra + row.filter(Boolean).length, 0);
+      return acc + count;
+    }, 0);
+
+    if (totalSelectedTasks === 0) {
+      setSubmitError("Please select at least one task to create a plan");
+      return;
+    }
+
+    setIsLoading(true);
+
+    // Build filtered plan using selections
+    const filteredPlan: PlanGeneration = {
+      ...planData,
+      commitments: planData.commitments
+        .map((c, ci) => {
+          const selForCommitment = selections[ci];
+          if (!selForCommitment) return c;
+          const routines = c.routines
+            .map((r, ri) => {
+              const taskSelectionRow = selForCommitment[ri] ?? r.tasks.map(() => true);
+              const tasks = r.tasks.filter((t, ti) => taskSelectionRow[ti]);
+              return { ...r, tasks };
+            })
+            .filter((r) => r.tasks && r.tasks.length > 0);
+          return { ...c, routines } as Commitments;
+        })
+        .filter((c) => c.routines && c.routines.length > 0),
+    };
+
+    saveGeneratedPlan(profile.id, filteredPlan).then(() => {
+      completeOnboarding().then(async () => {
+        // non-blocking analytics
+        void logEvent(
+          "onboarding_completed",
+          { plan_created: true },
+          profile.id,
+        );
+        await refreshProfile();
+        router.replace("/(tabs)");
+        router.push({
+          pathname: "/(tabs)",
+          params: { shouldShowIntro: "false" },
         });
       });
-    }
+    });
   };
+
+  // console.log(planData);
 
   if (isLoading) return <Loader />;
 
@@ -184,7 +222,7 @@ export default function Onboarding() {
           {currentStep === 3 && (
             <View>
               <Text style={styles.stepTitle}>
-                WHEN DO YOU WANT TO ACHIEVE YOUR GOAL?
+                IS THERE A TIMELINE FOR YOUR GOAL?
               </Text>
               <ButtonGroup
                 options={GOAL_TIMELINE_OPTIONS}
@@ -244,11 +282,18 @@ export default function Onboarding() {
           {currentStep === 6 &&
             (planData ? (
               <View>
-                <Text style={styles.stepTitle}>ARETE'S PLAN</Text>
+                <Text style={styles.stepTitle}>EDIT PLAN</Text>
                 <Text style={styles.goalText}>{planData.goal.title}</Text>
                 <Text style={styles.subText}>{planData.goal.description}</Text>
                 {planData?.commitments.map((commitment, index) => (
-                  <PlanComponent key={index} commitment={commitment} />
+                  <PlanComponent
+                    key={index}
+                    commitment={commitment}
+                    commitmentIndex={index}
+                    onChange={(ci, selection) => {
+                      setSelections((prev) => ({ ...prev, [ci]: selection }));
+                    }}
+                  />
                 ))}
               </View>
             ) : (
@@ -265,10 +310,26 @@ export default function Onboarding() {
           )}
           {currentStep === 6 && planData && (
             <View style={styles.actions}>
+              {submitError && (
+                <Text style={styles.errorText}>{submitError}</Text>
+              )}
               <Button
                 label="Create Plan"
                 type="primary"
-                onPress={handleComplete}
+                onPress={() => {
+                  setSubmitError(null);
+                  handleComplete();
+                }}
+                disabled={
+                  planData.commitments.reduce((acc, c, ci) => {
+                    const selForCommitment = selections[ci];
+                    if (!selForCommitment) {
+                      return acc + c.routines.reduce((a, r) => a + (r.tasks ? r.tasks.length : 0), 0);
+                    }
+                    const count = selForCommitment.reduce((ra, row) => ra + row.filter(Boolean).length, 0);
+                    return acc + count;
+                  }, 0) === 0
+                }
               />
             </View>
           )}
