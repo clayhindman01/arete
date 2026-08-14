@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "arete",
-    "slug": "arete",
+    "name": "Aspyr",
+    "slug": "aspyr",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "arete",
+    "scheme": "aspyr",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.clayhindman.arete",
+      "bundleIdentifier": "com.clayhindman.aspyr",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -24,7 +24,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.arete"
+      "package": "com.aspyr"
     },
     "web": {
       "output": "static",

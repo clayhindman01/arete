@@ -13,12 +13,14 @@ export default function TodaysPlan({
   setTodaysTasks,
   aiSummary,
   onTaskToggle,
+  isFirstDay,
 }: {
   dailyCheckInComplete: boolean;
   todaysTasks: Tasks[];
   setTodaysTasks: Dispatch<SetStateAction<Tasks[]>>;
   aiSummary: string;
   onTaskToggle?: (task: Tasks, nextValue: boolean) => void;
+  isFirstDay: () => boolean;
 }) {
   const { colors } = useTheme();
 
@@ -52,7 +54,7 @@ export default function TodaysPlan({
           </Text>
         </View>
       )}
-      {!dailyCheckInComplete && (
+      {!dailyCheckInComplete && !isFirstDay() && (
         <View
           style={{
             display: "flex",
@@ -227,7 +229,7 @@ const CheckListItem = ({
             renderTextContent(description, {
               fontSize: 12,
               color: isChecked ? "#A1A1AA" : colors.text,
-              textDecorationLine: isChecked ? "line-through" : "none",
+              // textDecorationLine: isChecked ? "line-through" : "none",
               textDecorationColor: "#b89b5e",
               letterSpacing: 1,
               textAlign: "center",
@@ -239,7 +241,7 @@ const CheckListItem = ({
                 fontSize: 12,
                 fontWeight: 600,
                 color: isChecked ? "#A1A1AA" : colors.text,
-                textDecorationLine: isChecked ? "line-through" : "none",
+                // textDecorationLine: isChecked ? "line-through" : "none",
                 textDecorationColor: "#b89b5e",
                 letterSpacing: 1,
                 paddingVertical: 5,

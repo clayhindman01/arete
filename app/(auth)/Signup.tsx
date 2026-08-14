@@ -84,7 +84,7 @@ export default function SignupScreen() {
           />
 
           <Text style={styles.footer}>
-            By creating an account you agree to Arete Terms & Privacy Policy
+            By creating an account you agree to Aspyr Terms & Privacy Policy
           </Text>
         </View>
       </TouchableWithoutFeedback>

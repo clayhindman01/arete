@@ -282,27 +282,6 @@ export async function getOrCreatePreCheckinDailyPlan(
     sort_order: index,
   }));
 
-  // // 3. Close any existing active plan (draft or previous)
-  // await supabase
-  //   .from("daily_plans")
-  //   .update({ is_current: false })
-  //   .eq("user_id", user.id)
-  //   .eq("is_current", true);
-
-  // // 4. Create NEW draft daily plan (pre-check-in state)
-  // const { data: plan, error: planError } = await supabase
-  //   .from("daily_plans")
-  //   .insert({
-  //     user_id: user.id,
-  //     is_current: true,
-  //     plan_date: new Date().toISOString().split("T")[0],
-  //     ai_summary: "Draft plan generated from latent pool (pre check-in)",
-  //   })
-  //   .select()
-  //   .single();
-
-  // if (planError) throw planError;
-
   const { data: plan, error } = await supabase.rpc("create_daily_plan", {
     p_user_id: user.id,
     p_plan_date: getCurrentDateWithTimezoneOffset(),
@@ -320,16 +299,13 @@ export async function getOrCreatePreCheckinDailyPlan(
         plan_id: plan[0].id,
         completed: false,
       })),
-    );
+    )
+    .select();
 
   if (taskError) throw taskError;
 
   return {
-    tasks: selectedTasks.map((t) => ({
-      ...t,
-      plan_id: plan[0].id,
-      completed: false,
-    })),
+    tasks: tasks ?? [],
     aiSummary: "AUTO GENERATED PLAN BECAUSE NO CHECK-IN COMPLETED",
   };
 }

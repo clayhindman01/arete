@@ -39,7 +39,7 @@ export default function Header({
               color: "#c7cbda",
               marginBottom: -10,
               paddingBottom: 4,
-              letterSpacing: 8,
+              letterSpacing: 10,
               textAlign: "center",
             }}
           >

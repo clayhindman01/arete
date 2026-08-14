@@ -58,7 +58,7 @@ export default function LoginScreen() {
       ) : (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.inner}>
-            <Text style={styles.title}>ARETE</Text>
+            <Text style={styles.title}>ASPYR</Text>
             <Text style={styles.subtitle}>
               Small Commitments. Sustained Growth.
             </Text>
@@ -106,7 +106,7 @@ export default function LoginScreen() {
             />
 
             <Text style={styles.footer}>
-              By continuing you agree to Arete Terms & Privacy Policy
+              By continuing you agree to Aspyr Terms & Privacy Policy
             </Text>
           </View>
         </TouchableWithoutFeedback>

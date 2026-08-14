@@ -184,6 +184,11 @@ export default function Dashboard() {
     }
   };
 
+  // TODO: Implement logic to determine if it's the first day of the plan. For now, returning false as a placeholder.
+  const isFirstDay = () => {
+    return false;
+  };
+
   if (isLoading && showIntro === "true") {
     return <PulseText route="home" />;
   }
@@ -191,6 +196,7 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <View style={{ flex: 1 }}>
+        {/* <ActivityIndicator size="large" color="white" /> */}
         <Loader />
       </View>
     );
@@ -221,7 +227,7 @@ export default function Dashboard() {
                 {goal}
               </Text>
             </Card>
-            {!dailyCheckInComplete && (
+            {!dailyCheckInComplete && !isFirstDay() && (
               <DailyCheckInTile
                 dailyCheckInComplete={dailyCheckInComplete}
                 setDailyCheckInComplete={setDailyCheckInComplete}
@@ -243,6 +249,7 @@ export default function Dashboard() {
             <TodaysPlan
               aiSummary={aiSummary}
               dailyCheckInComplete={dailyCheckInComplete}
+              isFirstDay={isFirstDay}
               todaysTasks={todaysTasks}
               setTodaysTasks={setTodaysTasks}
               onTaskToggle={(task, nextValue) => {
@@ -266,7 +273,7 @@ export default function Dashboard() {
               }}
             />
 
-            {dailyCheckInComplete && (
+            {dailyCheckInComplete && !isFirstDay() && (
               <DailyCheckInTile
                 dailyCheckInComplete={dailyCheckInComplete}
                 setDailyCheckInComplete={setDailyCheckInComplete}

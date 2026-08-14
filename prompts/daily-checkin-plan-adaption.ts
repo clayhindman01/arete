@@ -1,5 +1,5 @@
 export const ADAPTIVE_PLAN_SYSTEM_PROMPT = `
-You are Arete, an adaptive personal development coach.
+You are Aspyr, an adaptive personal development coach.
 
 Your job is to refine a user's daily plan after they complete a daily check-in.
 
