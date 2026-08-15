@@ -20,7 +20,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type StepType = 1 | 2 | 3 | 4;
+type StepType = 1 | 2 | 3 | 4 | 5;
 export type YesterdayDifficulty =
   | "very-easy"
   | "easy"
@@ -50,6 +50,8 @@ export interface CheckInValue {
   energyScale: EnergyScale | null;
   availableTime: AvailableTime | null;
   todaysImpediments: string;
+  tasksToAdd?: string;
+  tasksToRemove?: string;
 }
 
 export default function CheckIn() {
@@ -60,6 +62,8 @@ export default function CheckIn() {
     energyScale: null,
     availableTime: null,
     todaysImpediments: "",
+    tasksToAdd: "",
+    tasksToRemove: "",
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -177,6 +181,42 @@ export default function CheckIn() {
               />
               <View style={styles.actions}>
                 <Button
+                  label="Next"
+                  type="primary"
+                  onPress={() => setCurrentStep(5)}
+                />
+              </View>
+            </View>
+          )}
+
+          {currentStep === 5 && (
+            <View style={styles.buttonGap}>
+              <Text style={styles.stepTitle}>
+                Any specific changes you would like to make?
+              </Text>
+
+              <Text style={styles.stepSubtitle}>
+                Any tasks you'd like to add to today's plan? (optional)
+              </Text>
+              <TextField
+                placeholder="Add tasks (comma-separated)"
+                value={checkInValue.tasksToAdd || ""}
+                onChangeText={(text) =>
+                  setCheckInValue({ ...checkInValue, tasksToAdd: text })
+                }
+              />
+              <Text style={styles.stepSubtitle}>
+                Any tasks you'd like to remove from today's plan? (optional)
+              </Text>
+              <TextField
+                placeholder="Remove tasks (comma-separated)"
+                value={checkInValue.tasksToRemove || ""}
+                onChangeText={(text) =>
+                  setCheckInValue({ ...checkInValue, tasksToRemove: text })
+                }
+              />
+              <View style={styles.actions}>
+                <Button
                   label="Complete Check-in"
                   type="primary"
                   onPress={() => submitCheckIn(checkInValue)}
@@ -200,8 +240,12 @@ function CheckInHeader({
   const router = useRouter();
   const { colors } = useTheme();
   const handleBack = () => {
-    setCurrentStep(1);
-    router.back();
+    if (currentStep > 1) {
+      setCurrentStep((currentStep - 1) as StepType);
+      return;
+    } else {
+      router.back();
+    }
   };
   return (
     <View style={styles.header}>
@@ -218,6 +262,7 @@ function CheckInHeader({
         <ProgressChunk completed={currentStep >= 2} />
         <ProgressChunk completed={currentStep >= 3} />
         <ProgressChunk completed={currentStep >= 4} />
+        <ProgressChunk completed={currentStep >= 5} />
       </View>
     </View>
   );
@@ -247,7 +292,7 @@ const styles = StyleSheet.create({
   },
   progressChunk: {
     height: 5,
-    width: "20%",
+    width: "17%",
     borderRadius: 10,
     backgroundColor: "#A1A1AA",
   },
@@ -266,6 +311,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#ecedee",
     marginBottom: 24,
+  },
+  stepSubtitle: {
+    fontSize: 16,
+    color: "#ecedee",
+    marginBottom: 8,
+    textAlign: "center",
   },
   buttonGap: {
     gap: 10,

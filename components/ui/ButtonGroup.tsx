@@ -73,8 +73,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   buttonSelected: {
-    backgroundColor: "rgb(103, 189, 122)",
-    borderColor: "rgb(103, 189, 122)",
+    backgroundColor: "#b89b5e",
   },
   buttonUnselected: {
     backgroundColor: "transparent",

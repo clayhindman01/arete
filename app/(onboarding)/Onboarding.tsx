@@ -17,6 +17,8 @@ import {
   GOAL_TIMELINE_OPTIONS,
 } from "@/types/onboarding";
 import { Commitments, PlanGeneration } from "@/types/PlanGeneration";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -26,6 +28,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -190,6 +193,9 @@ export default function Onboarding() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
+        {currentStep != 6 && (
+          <Header currentStep={currentStep} setCurrentStep={setCurrentStep} />
+        )}
         <ScrollView
           contentContainerStyle={styles.content}
           scrollEnabled={currentStep === 6}
@@ -363,6 +369,49 @@ export default function Onboarding() {
   );
 }
 
+function Header({
+  currentStep,
+  setCurrentStep,
+}: {
+  currentStep: 1 | 2 | 3 | 4 | 5 | 6;
+  setCurrentStep: (value: 1 | 2 | 3 | 4 | 5 | 6) => void;
+}) {
+  const router = useRouter();
+  const { colors } = useTheme();
+  const handleBack = () => {
+    setCurrentStep((currentStep - 1) as 1 | 2 | 3 | 4 | 5 | 6);
+  };
+  return (
+    <View style={styles.header}>
+      {currentStep != 2 && (
+        <TouchableOpacity
+          onPress={handleBack}
+          style={{ position: "absolute", left: 0, paddingTop: 10 }}
+        >
+          <MaterialCommunityIcons
+            name="chevron-left"
+            color={colors.text}
+            size={50}
+          />
+        </TouchableOpacity>
+      )}
+
+      <View style={styles.progressChunkContainer}>
+        <ProgressChunk completed={currentStep >= 2} />
+        <ProgressChunk completed={currentStep >= 3} />
+        <ProgressChunk completed={currentStep >= 4} />
+        <ProgressChunk completed={currentStep >= 5} />
+      </View>
+    </View>
+  );
+}
+
+function ProgressChunk({ completed = false }: { completed?: boolean }) {
+  return (
+    <View style={[styles.progressChunk, completed && styles.completed]}></View>
+  );
+}
+
 const styles = StyleSheet.create({
   page: {
     flex: 1,
@@ -411,5 +460,25 @@ const styles = StyleSheet.create({
   },
   actions: {
     marginTop: 24,
+  },
+  progressChunk: {
+    height: 5,
+    width: "20%",
+    borderRadius: 10,
+    backgroundColor: "#A1A1AA",
+  },
+  completed: {
+    backgroundColor: "#F5F5F5",
+  },
+  progressChunkContainer: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+  },
+  header: {
+    flexDirection: "row",
+    paddingTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
