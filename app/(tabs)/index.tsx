@@ -54,6 +54,12 @@ export default function Dashboard() {
   const [selectedMenu, setSelectedMenu] = useState<MenuOption>();
 
   const showIntro = shouldShowIntro === undefined ? "true" : shouldShowIntro;
+  console.log(
+    "showIntro",
+    showIntro,
+    "dailyCheckInCompleted",
+    dailyCheckInCompleted,
+  );
 
   const deriveCalendarStatus = (tasks: Tasks[] | null | undefined) => {
     if (!tasks || tasks.length === 0) {

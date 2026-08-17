@@ -137,6 +137,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   buttonTextUnselected: {
-    color: "#e2e8f0",
+    color: "#000",
   },
 });

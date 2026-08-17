@@ -88,7 +88,7 @@ export default function CheckIn() {
         setIsLoading(false);
         router.replace({
           pathname: "/(tabs)",
-          params: { dailyCheckInCompleted: "true" },
+          params: { dailyCheckInCompleted: "true", shouldShowIntro: "false" },
         });
       });
   }
