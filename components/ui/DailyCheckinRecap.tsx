@@ -3,6 +3,7 @@ import { CheckIn } from "@/types/checkIn";
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import InsightsTile from "../tiles/InsightsTile";
+import Loader from "./Loader";
 
 export default function DailyCheckinRecap({
   aiSummary,
@@ -10,11 +11,14 @@ export default function DailyCheckinRecap({
   aiSummary: string;
 }) {
   const [checkinData, setCheckinData] = useState<CheckIn>();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    getCheckinData().then((res) => {
-      setCheckinData(res);
-    });
+    getCheckinData()
+      .then((res) => {
+        setCheckinData(res);
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
   const yesterdaysDifficultyMap = new Map([
@@ -45,6 +49,8 @@ export default function DailyCheckinRecap({
     typeof checkinData?.energy_level === "number"
       ? energyMap.get(checkinData.energy_level)
       : undefined;
+
+  if (isLoading) return <Loader />;
 
   return (
     // removing the padding from the menu modal and re-adding it back inside so that the scollbar is on the edge of the screen

@@ -1,8 +1,6 @@
 import { deleteAccount, signOut } from "@/lib/auth";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -81,103 +79,6 @@ export default function Settings() {
     </SafeAreaView>
   );
 }
-
-type optionsType = {
-  label: string;
-  value: string;
-};
-
-const SettingsDropdown = ({
-  options,
-  title,
-  defaultOption,
-}: {
-  options: Array<optionsType>;
-  title: string;
-  defaultOption: optionsType;
-}) => {
-  const { colors } = useTheme();
-  const [selected, setSelected] = useState<optionsType>(defaultOption);
-  return (
-    <View
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        padding: 10,
-      }}
-    >
-      <Text
-        style={{
-          color: colors.text,
-          fontSize: 18,
-          fontWeight: 600,
-          letterSpacing: 1,
-        }}
-      >
-        {title}
-      </Text>
-
-      <View style={{ display: "flex", flexDirection: "row" }}>
-        {options.map((option, index) => (
-          <SettingsDropdownOption
-            label={option.label}
-            key={index}
-            selectedOption={selected}
-          />
-        ))}
-      </View>
-    </View>
-  );
-};
-
-const SettingsDropdownOption = ({
-  label,
-  selectedOption,
-}: {
-  label: string;
-  selectedOption: optionsType;
-}) => {
-  const { colors } = useTheme();
-  return (
-    <View style={{ width: "33%", marginTop: 10 }}>
-      <TouchableOpacity
-        style={[
-          {
-            padding: 10,
-          },
-          selectedOption.label === label && {
-            borderColor: "rgba(51, 51, 51)",
-            borderWidth: 1,
-            borderRadius: 5,
-          },
-        ]}
-      >
-        <Text
-          style={{ color: colors.text, textAlign: "center", letterSpacing: 1 }}
-        >
-          {label}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
-
-const SettingsHeader = () => {
-  const router = useRouter();
-  const { colors } = useTheme();
-  return (
-    <View>
-      <TouchableOpacity onPress={() => router.back()}>
-        <MaterialCommunityIcons
-          name="chevron-left"
-          color={colors.text}
-          size={40}
-        />
-      </TouchableOpacity>
-    </View>
-  );
-};
 
 const SettingsButton = ({
   label,

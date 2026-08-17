@@ -174,13 +174,6 @@ export default function Dashboard() {
     }
   }, [todaysTasks]);
 
-  // const completedTasks = useMemo(
-  //   () => todaysTasks.filter((task) => task.completed).length,
-  //   [todaysTasks],
-  // );
-
-  console.log("todaysTasks", todaysTasks, "completedTasks", completedTasks);
-
   const renderMenuComponent = () => {
     switch (selectedMenu) {
       case "settings":

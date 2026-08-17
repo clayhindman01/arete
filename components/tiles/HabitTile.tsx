@@ -151,7 +151,6 @@ export default function HabitTile({
     const loadCalendar = async () => {
       try {
         const res = await getCalendar(firstDayOfMonth);
-        console.log("Calendar data fetched:", res);
         if (isActive) {
           setCalendarData(mergeStatusOverrides(Array.isArray(res) ? res : []));
           setIsLoading(false);

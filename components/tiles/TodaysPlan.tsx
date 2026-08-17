@@ -48,6 +48,7 @@ export default function TodaysPlan({
               letterSpacing: 1,
               fontSize: 12,
               fontWeight: 600,
+              textAlign: "center",
             }}
           >
             {aiSummary}
@@ -200,11 +201,12 @@ const CheckListItem = ({
         >
           {title &&
             renderTextContent(title, {
-              fontSize: 16,
+              fontSize: 14,
               color: isChecked ? "#A1A1AA" : colors.text,
               textDecorationLine: isChecked ? "line-through" : "none",
               textDecorationColor: "#b89b5e",
-              letterSpacing: 1.5,
+              letterSpacing: 1,
+              fontWeight: 600,
               textAlign: "center",
             })}
         </Pressable>
@@ -258,7 +260,7 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingBottom: 10,
   },
   titleText: {
@@ -266,7 +268,6 @@ const styles = StyleSheet.create({
     color: "#F5F5F5",
     fontWeight: 600,
     letterSpacing: 1,
-    // textAlign: "center",
   },
   titleSubText: {
     fontSize: 12,
