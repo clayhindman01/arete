@@ -145,5 +145,5 @@ export default function Index() {
     return <Redirect href="/(onboarding)/Onboarding" />;
   }
 
-  return <Redirect href="/(tabs)" />;
+  return <Redirect href="/(paywall)" />;
 }

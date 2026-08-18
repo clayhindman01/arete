@@ -1,4 +1,10 @@
 import { deleteAccount, signOut } from "@/lib/auth";
+import { useProfile } from "@/lib/ProfileContext";
+import {
+  initializeRevenueCat,
+  openCustomerCenter,
+  syncRevenueCatUser,
+} from "@/lib/revenuecat";
 import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
@@ -6,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Settings() {
   const router = useRouter();
+  const { user } = useProfile();
 
   const handleSignOutPress = () => {
     signOut().then(() => {
@@ -55,6 +62,28 @@ export default function Settings() {
     );
   };
 
+  const handleManageSubscriptionPress = async () => {
+    if (!user?.id) {
+      Alert.alert(
+        "Not signed in",
+        "Please sign in again before managing your subscription.",
+      );
+      return;
+    }
+
+    try {
+      await initializeRevenueCat(user.id);
+      await syncRevenueCatUser(user.id);
+      await openCustomerCenter();
+    } catch (error) {
+      console.error("Failed to open Customer Center:", error);
+      Alert.alert(
+        "Unable to open subscription management",
+        "Please try again in a few moments.",
+      );
+    }
+  };
+
   return (
     <SafeAreaView
       style={{
@@ -64,7 +93,7 @@ export default function Settings() {
     >
       <SettingsButton
         label="Manage Subscription"
-        onPress={handleNoFeaturePress}
+        onPress={handleManageSubscriptionPress}
       />
       <SettingsButton
         label="Create a New Goal"

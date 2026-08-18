@@ -176,11 +176,7 @@ export default function Onboarding() {
           profile.id,
         );
         await refreshProfile();
-        router.replace("/(tabs)");
-        router.push({
-          pathname: "/(tabs)",
-          params: { shouldShowIntro: "false" },
-        });
+        router.replace("/(paywall)");
       });
     });
   };
@@ -376,7 +372,6 @@ function Header({
   currentStep: 1 | 2 | 3 | 4 | 5 | 6;
   setCurrentStep: (value: 1 | 2 | 3 | 4 | 5 | 6) => void;
 }) {
-  const router = useRouter();
   const { colors } = useTheme();
   const handleBack = () => {
     setCurrentStep((currentStep - 1) as 1 | 2 | 3 | 4 | 5 | 6);

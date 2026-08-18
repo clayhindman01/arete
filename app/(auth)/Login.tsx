@@ -32,7 +32,7 @@ export default function LoginScreen() {
     signIn(email, password)
       .then(() => {
         router.replace({
-          pathname: "/(tabs)",
+          pathname: "/(paywall)",
           params: {
             shouldShowIntro: "false",
           },
