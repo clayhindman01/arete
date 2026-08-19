@@ -12,7 +12,20 @@ import {
 } from "./utils";
 
 export async function getProfile() {
-  const { data, error } = await supabase.from("profiles").select("*").single();
+  // Ensure we fetch the profile for the authenticated user so the request
+  // fails quickly when there's no user and avoids ambiguous queries that
+  // might hang under certain network/auth conditions.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("User not authenticated");
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
 
   if (error) {
     throw error;

@@ -6,6 +6,7 @@ import { generatePlan } from "@/lib/ai";
 import { logEvent } from "@/lib/analytics";
 import { completeOnboarding, saveGeneratedPlan } from "@/lib/db";
 import { useProfile } from "@/lib/ProfileContext";
+import { TaskValidationErrors, validateTask } from "@/lib/taskValidation";
 import type {
   AvailableTime,
   GoalTimeline,
@@ -51,6 +52,9 @@ export default function Onboarding() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [selections, setSelections] = useState<Record<number, boolean[][]>>({});
   const [editingTaskKey, setEditingTaskKey] = useState<string | null>(null);
+  const [taskErrors, setTaskErrors] = useState<
+    Record<string, TaskValidationErrors>
+  >({});
 
   const synchronizeSelections = (nextPlan: PlanGeneration) => {
     setSelections((prev) => {
@@ -142,7 +146,17 @@ export default function Onboarding() {
       const taskCount =
         nextPlan.commitments[commitmentIndex].routines[routineIndex].tasks
           .length;
-      setEditingTaskKey(`${commitmentIndex}-${routineIndex}-${taskCount - 1}`);
+      const nextTaskKey = `${commitmentIndex}-${routineIndex}-${taskCount - 1}`;
+      const nextTask =
+        nextPlan.commitments[commitmentIndex].routines[routineIndex].tasks[
+          taskCount - 1
+        ];
+
+      setEditingTaskKey(nextTaskKey);
+      setTaskErrors((previous) => ({
+        ...previous,
+        [nextTaskKey]: validateTask(nextTask),
+      }));
       synchronizeSelections(nextPlan);
       return nextPlan;
     });
@@ -282,6 +296,15 @@ export default function Onboarding() {
     return `Weekly on ${formatDays(days)}`;
   };
 
+  const updateTaskErrors = (taskKey: string, task: any) => {
+    const nextErrors = validateTask(task);
+    setTaskErrors((previous) => ({
+      ...previous,
+      [taskKey]: nextErrors,
+    }));
+    return nextErrors;
+  };
+
   const handleGeneratePlan = async (data: OnboardingData = formData) => {
     setCurrentStep(6);
     console.log("Onboarding data:", data);
@@ -346,6 +369,23 @@ export default function Onboarding() {
         .filter((c) => c.routines && c.routines.length > 0),
     };
 
+    const hasInvalidTask = filteredPlan.commitments.some((commitment) =>
+      commitment.routines.some((routine) =>
+        routine.tasks.some((task) => {
+          const errors = validateTask(task);
+          return Object.keys(errors).length > 0;
+        }),
+      ),
+    );
+
+    if (hasInvalidTask) {
+      setSubmitError(
+        "Every task must include a title, description, and estimated time.",
+      );
+      setIsLoading(false);
+      return;
+    }
+
     saveGeneratedPlan(profile.id, filteredPlan).then(() => {
       completeOnboarding().then(async () => {
         // non-blocking analytics
@@ -371,201 +411,232 @@ export default function Onboarding() {
         {currentStep != 6 && (
           <Header currentStep={currentStep} setCurrentStep={setCurrentStep} />
         )}
-        <ScrollView
+        {/* <ScrollView
           contentContainerStyle={styles.content}
           scrollEnabled={currentStep === 6}
-        >
-          {currentStep === 1 && (
-            <View>
-              <Text style={styles.stepTitle}>What should I call you?</Text>
-              <TextField
-                placeholder="Enter your name"
-                value={formData.name}
-                onChangeText={(text) => {
-                  setFormData({ ...formData, name: text });
-                  if (errors.name) setErrors({ ...errors, name: undefined });
-                }}
-                error={errors.name}
-              />
-            </View>
-          )}
+        > */}
+        {currentStep === 1 && (
+          <View>
+            <Text style={styles.stepTitle}>What should I call you?</Text>
+            <TextField
+              placeholder="Enter your name"
+              value={formData.name}
+              onChangeText={(text) => {
+                setFormData({ ...formData, name: text });
+                if (errors.name) setErrors({ ...errors, name: undefined });
+              }}
+              error={errors.name}
+            />
+          </View>
+        )}
 
-          {currentStep === 2 && (
-            <View>
-              <Text style={styles.stepTitle}>
-                WHAT IS A GOAL YOU'D LIKE TO MAKE PROGRESS ON?
-              </Text>
-              <TextField
-                placeholder="Describe your goal"
-                value={formData.goal}
-                onChangeText={(text) => {
-                  setFormData({ ...formData, goal: text });
-                  if (errors.goal) setErrors({ ...errors, goal: undefined });
-                }}
-                error={errors.goal}
-              />
-            </View>
-          )}
+        {currentStep === 2 && (
+          <View>
+            <Text style={styles.stepTitle}>
+              WHAT IS A GOAL YOU'D LIKE TO MAKE PROGRESS ON?
+            </Text>
+            <TextField
+              placeholder="Describe your goal"
+              value={formData.goal}
+              onChangeText={(text) => {
+                setFormData({ ...formData, goal: text });
+                if (errors.goal) setErrors({ ...errors, goal: undefined });
+              }}
+              error={errors.goal}
+            />
+          </View>
+        )}
 
-          {currentStep === 3 && (
-            <View>
-              <Text style={styles.stepTitle}>
-                IS THERE A TIMELINE FOR ACHIEVING YOUR GOAL?
-              </Text>
-              <ButtonGroup
-                options={GOAL_TIMELINE_OPTIONS}
-                value={formData.goalTimeline}
-                onChange={(value: GoalTimeline) => {
-                  const nextFormData = { ...formData, goalTimeline: value };
-                  setFormData(nextFormData);
-                  handleSelectOption(3, nextFormData);
-                }}
-              />
-              {errors.goalTimeline && (
-                <Text style={styles.errorText}>{errors.goalTimeline}</Text>
-              )}
-            </View>
-          )}
+        {currentStep === 3 && (
+          <View>
+            <Text style={styles.stepTitle}>
+              IS THERE A TIMELINE FOR ACHIEVING YOUR GOAL?
+            </Text>
+            <ButtonGroup
+              options={GOAL_TIMELINE_OPTIONS}
+              value={formData.goalTimeline}
+              onChange={(value: GoalTimeline) => {
+                const nextFormData = { ...formData, goalTimeline: value };
+                setFormData(nextFormData);
+                handleSelectOption(3, nextFormData);
+              }}
+            />
+            {errors.goalTimeline && (
+              <Text style={styles.errorText}>{errors.goalTimeline}</Text>
+            )}
+          </View>
+        )}
 
-          {currentStep === 4 && (
-            <View>
-              <Text style={styles.stepTitle}>
-                DESCRIBE YOUR CURRENT PROGRESS ON THIS GOAL
+        {currentStep === 4 && (
+          <View>
+            <Text style={styles.stepTitle}>
+              DESCRIBE YOUR CURRENT PROGRESS ON THIS GOAL
+            </Text>
+            <Text style={styles.subText}>
+              (The more details you include the more accurate your plan will be)
+            </Text>
+            <TextField
+              placeholder="Describe your current situation"
+              value={formData.startingPoint}
+              onChangeText={(text) => {
+                setFormData({ ...formData, startingPoint: text });
+                if (errors.startingPoint)
+                  setErrors({ ...errors, startingPoint: undefined });
+              }}
+              error={errors.startingPoint}
+            />
+          </View>
+        )}
+
+        {currentStep === 5 && (
+          <View>
+            <Text style={styles.stepTitle}>
+              HOW MUCH TIME DAILY DO YOU HAVE AVAILABLE?
+            </Text>
+            <ButtonGroup
+              options={AVAILABLE_TIME_OPTIONS}
+              value={formData.availableTime}
+              onChange={(value: AvailableTime) => {
+                const nextFormData = { ...formData, availableTime: value };
+                setFormData(nextFormData);
+                handleSelectOption(5, nextFormData);
+              }}
+            />
+            {errors.availableTime && (
+              <Text style={styles.errorText}>{errors.availableTime}</Text>
+            )}
+          </View>
+        )}
+
+        {currentStep === 6 &&
+          (planData ? (
+            <View style={styles.reviewContainer}>
+              <Text style={styles.stepTitle}>EDIT PLAN</Text>
+              <Text style={styles.goalText}>
+                Review your suggestions and make any edits before creating the
+                plan.
               </Text>
               <Text style={styles.subText}>
-                (The more details you include the more accurate your plan will
-                be)
+                This is your plan, so make it work for you!
               </Text>
-              <TextField
-                placeholder="Describe your current situation"
-                value={formData.startingPoint}
-                onChangeText={(text) => {
-                  setFormData({ ...formData, startingPoint: text });
-                  if (errors.startingPoint)
-                    setErrors({ ...errors, startingPoint: undefined });
-                }}
-                error={errors.startingPoint}
-              />
-            </View>
-          )}
 
-          {currentStep === 5 && (
-            <View>
-              <Text style={styles.stepTitle}>
-                HOW MUCH TIME DAILY DO YOU HAVE AVAILABLE?
-              </Text>
-              <ButtonGroup
-                options={AVAILABLE_TIME_OPTIONS}
-                value={formData.availableTime}
-                onChange={(value: AvailableTime) => {
-                  const nextFormData = { ...formData, availableTime: value };
-                  setFormData(nextFormData);
-                  handleSelectOption(5, nextFormData);
-                }}
-              />
-              {errors.availableTime && (
-                <Text style={styles.errorText}>{errors.availableTime}</Text>
-              )}
-            </View>
-          )}
+              <ScrollView
+                contentContainerStyle={styles.reviewScrollContent}
+                showsVerticalScrollIndicator={true}
+              >
+                {planData.commitments.map((commitment, commitmentIndex) => (
+                  <View
+                    key={`commitment-${commitmentIndex}`}
+                    style={styles.commitmentCard}
+                  >
+                    <Text style={styles.commitmentTitle}>
+                      {commitment.title}
+                    </Text>
 
-          {currentStep === 6 &&
-            (planData ? (
-              <View style={styles.reviewContainer}>
-                <Text style={styles.stepTitle}>EDIT PLAN</Text>
-                <Text style={styles.goalText}>
-                  Review your suggestions and make any edits before creating the
-                  plan.
-                </Text>
-                <Text style={styles.subText}>
-                  This is your plan, so make it work for you!
-                </Text>
+                    {commitment.routines.map((routine, routineIndex) => (
+                      <View
+                        key={`routine-${routineIndex}`}
+                        style={styles.routineCard}
+                      >
+                        <View style={styles.reviewHeaderRow}>
+                          <Text style={styles.routineTitle}>
+                            {routine.title}
+                          </Text>
+                          <Button
+                            label="Add task"
+                            type="secondary"
+                            onPress={() =>
+                              addPlanTask(commitmentIndex, routineIndex)
+                            }
+                          />
+                        </View>
 
-                <ScrollView
-                  contentContainerStyle={styles.reviewScrollContent}
-                  showsVerticalScrollIndicator={true}
-                >
-                  {planData.commitments.map((commitment, commitmentIndex) => (
-                    <View
-                      key={`commitment-${commitmentIndex}`}
-                      style={styles.commitmentCard}
-                    >
-                      <Text style={styles.commitmentTitle}>
-                        {commitment.title}
-                      </Text>
+                        {routine.tasks.map((task, taskIndex) => {
+                          const taskKey = `${commitmentIndex}-${routineIndex}-${taskIndex}`;
+                          const isEditing = editingTaskKey === taskKey;
 
-                      {commitment.routines.map((routine, routineIndex) => (
-                        <View
-                          key={`routine-${routineIndex}`}
-                          style={styles.routineCard}
-                        >
-                          <View style={styles.reviewHeaderRow}>
-                            <Text style={styles.routineTitle}>
-                              {routine.title}
-                            </Text>
-                            <Button
-                              label="Add task"
-                              type="secondary"
-                              onPress={() =>
-                                addPlanTask(commitmentIndex, routineIndex)
-                              }
-                            />
-                          </View>
-
-                          {routine.tasks.map((task, taskIndex) => {
-                            const taskKey = `${commitmentIndex}-${routineIndex}-${taskIndex}`;
-                            const isEditing = editingTaskKey === taskKey;
-
-                            return (
-                              <View key={taskKey} style={styles.reviewTaskCard}>
-                                <View style={styles.taskCardHeader}>
+                          return (
+                            <View key={taskKey} style={styles.reviewTaskCard}>
+                              <View style={styles.taskCardHeader}>
+                                <View style={styles.taskContentColumn}>
                                   <Text style={styles.cardLabel}>
-                                    Task {taskIndex + 1}
+                                    {task.title || "Untitled task"}
                                   </Text>
-                                  <View style={styles.taskActionRow}>
-                                    <TouchableOpacity
-                                      onPress={() =>
-                                        setEditingTaskKey(
-                                          isEditing ? null : taskKey,
-                                        )
-                                      }
-                                      style={styles.editTaskButton}
-                                    >
-                                      <Text style={styles.editTaskText}>
-                                        {isEditing ? "Done" : "Edit"}
+                                  {isEditing ? null : (
+                                    <>
+                                      <Text
+                                        style={styles.taskSummaryDescription}
+                                      >
+                                        {task.description ||
+                                          "No description added."}
                                       </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                      onPress={() =>
-                                        removePlanTask(
-                                          commitmentIndex,
-                                          routineIndex,
-                                          taskIndex,
-                                        )
-                                      }
-                                      style={styles.removeTaskButton}
-                                    >
-                                      <Text style={styles.removeTaskText}>
-                                        Remove
+                                      <Text style={styles.taskSummaryMeta}>
+                                        {task.estimated_minutes || 30} min
                                       </Text>
-                                    </TouchableOpacity>
-                                  </View>
+                                    </>
+                                  )}
                                 </View>
 
-                                {isEditing ? (
+                                <View style={styles.taskActionRow}>
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      if (isEditing) {
+                                        const errors = updateTaskErrors(
+                                          taskKey,
+                                          task,
+                                        );
+                                        if (Object.keys(errors).length === 0) {
+                                          setEditingTaskKey(null);
+                                        }
+                                        return;
+                                      }
+
+                                      setEditingTaskKey(taskKey);
+                                    }}
+                                    style={styles.editTaskButton}
+                                  >
+                                    <Text style={styles.editTaskText}>
+                                      {isEditing ? "Done" : "Edit"}
+                                    </Text>
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    onPress={() =>
+                                      removePlanTask(
+                                        commitmentIndex,
+                                        routineIndex,
+                                        taskIndex,
+                                      )
+                                    }
+                                    style={styles.removeTaskButton}
+                                  >
+                                    <Text style={styles.removeTaskText}>
+                                      Remove
+                                    </Text>
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
+
+                              {
+                                isEditing && (
                                   <View style={styles.taskEditor}>
                                     <Text style={styles.fieldLabel}>Title</Text>
                                     <TextField
                                       placeholder="Task title"
                                       value={task.title}
-                                      onChangeText={(text) =>
+                                      error={taskErrors[taskKey]?.title}
+                                      onChangeText={(text) => {
+                                        const nextTask = {
+                                          ...task,
+                                          title: text,
+                                        };
+                                        updateTaskErrors(taskKey, nextTask);
                                         updatePlanTask(
                                           commitmentIndex,
                                           routineIndex,
                                           taskIndex,
                                           { title: text },
-                                        )
-                                      }
+                                        );
+                                      }}
                                     />
 
                                     <Text style={styles.fieldLabel}>
@@ -574,14 +645,20 @@ export default function Onboarding() {
                                     <TextField
                                       placeholder="Task description"
                                       value={task.description}
-                                      onChangeText={(text) =>
+                                      error={taskErrors[taskKey]?.description}
+                                      onChangeText={(text) => {
+                                        const nextTask = {
+                                          ...task,
+                                          description: text,
+                                        };
+                                        updateTaskErrors(taskKey, nextTask);
                                         updatePlanTask(
                                           commitmentIndex,
                                           routineIndex,
                                           taskIndex,
                                           { description: text },
-                                        )
-                                      }
+                                        );
+                                      }}
                                     />
 
                                     <Text style={styles.fieldLabel}>
@@ -592,18 +669,26 @@ export default function Onboarding() {
                                       value={String(
                                         task.estimated_minutes ?? 30,
                                       )}
+                                      error={
+                                        taskErrors[taskKey]?.estimated_minutes
+                                      }
                                       keyboardType="numeric"
-                                      onChangeText={(text) =>
+                                      onChangeText={(text) => {
+                                        const nextMinutes = Number(text) || 0;
+                                        const nextTask = {
+                                          ...task,
+                                          estimated_minutes: nextMinutes,
+                                        };
+                                        updateTaskErrors(taskKey, nextTask);
                                         updatePlanTask(
                                           commitmentIndex,
                                           routineIndex,
                                           taskIndex,
                                           {
-                                            estimated_minutes:
-                                              Number(text) || 0,
+                                            estimated_minutes: nextMinutes,
                                           },
-                                        )
-                                      }
+                                        );
+                                      }}
                                     />
 
                                     <Text style={styles.fieldLabel}>
@@ -613,77 +698,83 @@ export default function Onboarding() {
                                       {formatRoutineFrequency(routine)}
                                     </Text>
                                   </View>
-                                ) : (
-                                  <View style={styles.taskSummaryRow}>
-                                    <View style={styles.taskSummaryContent}>
-                                      <Text style={styles.taskSummaryTitle}>
-                                        {task.title || "Untitled task"}
-                                      </Text>
-                                      <Text style={styles.taskSummaryFrequency}>
-                                        {formatRoutineFrequency(routine)}
-                                      </Text>
-                                    </View>
-                                    <Text style={styles.taskSummaryMeta}>
-                                      {task.estimated_minutes || 30} min
-                                    </Text>
-                                  </View>
-                                )}
-                              </View>
-                            );
-                          })}
-                        </View>
-                      ))}
-                    </View>
-                  ))}
-                </ScrollView>
-              </View>
-            ) : (
-              <>
-                <Text style={styles.stepTitle}>Creating Plan</Text>
-                <ActivityIndicator size="large" color="white" />
-              </>
-            ))}
+                                )
+                                // : (
+                                //   <View style={styles.taskSummaryRow}>
+                                //     <View style={styles.taskSummaryContent}>
+                                //       <Text style={styles.taskSummaryTitle}>
+                                //         {task.title || "Untitled task"}
+                                //       </Text>
+                                //       <Text
+                                //         style={styles.taskSummaryDescription}
+                                //       >
+                                //         {task.description ||
+                                //           "No description added."}
+                                //       </Text>
+                                //       <Text style={styles.taskSummaryFrequency}>
+                                //         {formatRoutineFrequency(routine)}
+                                //       </Text>
+                                //     </View>
+                                //     <Text style={styles.taskSummaryMeta}>
+                                //       {task.estimated_minutes || 30} min
+                                //     </Text>
+                                //   </View>
+                                // )
+                              }
+                            </View>
+                          );
+                        })}
+                      </View>
+                    ))}
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.stepTitle}>Creating Plan</Text>
+              <ActivityIndicator size="large" color="white" />
+            </>
+          ))}
 
-          {(currentStep === 1 || currentStep === 2 || currentStep === 4) && (
-            <View style={styles.actions}>
-              <Button label="Next" type="primary" onPress={handleNext} />
-            </View>
-          )}
-          {currentStep === 6 && planData && (
-            <View style={styles.actions}>
-              {submitError && (
-                <Text style={styles.errorText}>{submitError}</Text>
-              )}
-              <Button
-                label="Create Plan"
-                type="primary"
-                onPress={() => {
-                  setSubmitError(null);
-                  handleComplete();
-                }}
-                disabled={
-                  planData.commitments.reduce((acc, c, ci) => {
-                    const selForCommitment = selections[ci];
-                    if (!selForCommitment) {
-                      return (
-                        acc +
-                        c.routines.reduce(
-                          (a, r) => a + (r.tasks ? r.tasks.length : 0),
-                          0,
-                        )
-                      );
-                    }
-                    const count = selForCommitment.reduce(
-                      (ra, row) => ra + row.filter(Boolean).length,
-                      0,
+        {(currentStep === 1 || currentStep === 2 || currentStep === 4) && (
+          <View style={styles.actions}>
+            <Button label="Next" type="primary" onPress={handleNext} />
+          </View>
+        )}
+        {currentStep === 6 && planData && (
+          <View style={styles.actions}>
+            {submitError && <Text style={styles.errorText}>{submitError}</Text>}
+            <Button
+              label="Create Plan"
+              type="primary"
+              onPress={() => {
+                setSubmitError(null);
+                handleComplete();
+              }}
+              disabled={
+                planData.commitments.reduce((acc, c, ci) => {
+                  const selForCommitment = selections[ci];
+                  if (!selForCommitment) {
+                    return (
+                      acc +
+                      c.routines.reduce(
+                        (a, r) => a + (r.tasks ? r.tasks.length : 0),
+                        0,
+                      )
                     );
-                    return acc + count;
-                  }, 0) === 0
-                }
-              />
-            </View>
-          )}
-        </ScrollView>
+                  }
+                  const count = selForCommitment.reduce(
+                    (ra, row) => ra + row.filter(Boolean).length,
+                    0,
+                  );
+                  return acc + count;
+                }, 0) === 0
+              }
+            />
+          </View>
+        )}
+        {/* </ScrollView> */}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -788,9 +879,14 @@ const styles = StyleSheet.create({
   },
   taskCardHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     marginBottom: 4,
+    gap: 12,
+  },
+  taskContentColumn: {
+    flex: 1,
+    gap: 4,
   },
   taskActionRow: {
     flexDirection: "row",
@@ -813,8 +909,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     letterSpacing: 1,
-    marginBottom: 8,
+    marginBottom: 2,
     textTransform: "uppercase",
+    flexShrink: 1,
+    flexWrap: "wrap",
   },
   editTaskButton: {
     borderWidth: 1,
@@ -845,7 +943,7 @@ const styles = StyleSheet.create({
   taskSummaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     paddingVertical: 6,
     gap: 12,
   },
@@ -857,6 +955,15 @@ const styles = StyleSheet.create({
     color: "#ecedee",
     fontSize: 14,
     fontWeight: "600",
+    flexShrink: 1,
+    flexWrap: "wrap",
+  },
+  taskSummaryDescription: {
+    color: "#d4d4d8",
+    fontSize: 12,
+    lineHeight: 18,
+    flexShrink: 1,
+    flexWrap: "wrap",
   },
   taskSummaryFrequency: {
     color: "#a1a1aa",
@@ -868,6 +975,7 @@ const styles = StyleSheet.create({
     color: "#a1a1aa",
     fontSize: 12,
     fontWeight: "600",
+    marginTop: 2,
   },
   taskFrequencyValue: {
     color: "#ecedee",

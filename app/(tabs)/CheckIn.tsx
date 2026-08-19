@@ -5,6 +5,7 @@ import TextField from "@/components/ui/TextField";
 import { generateAdaptiveDailyPlan } from "@/lib/ai";
 import { getCurrentUser } from "@/lib/auth";
 import { createDailyCheckIn, saveAdaptiveDailyPlan } from "@/lib/db";
+import { TaskValidationErrors, validateTask } from "@/lib/taskValidation";
 import { AVAILABLE_TIME_OPTIONS, AvailableTime } from "@/types/onboarding";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
@@ -78,6 +79,10 @@ export default function CheckIn() {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [difficultyNoteError, setDifficultyNoteError] = useState<string>("");
+  const [taskErrors, setTaskErrors] = useState<
+    Record<number, TaskValidationErrors>
+  >({});
+  const [reviewError, setReviewError] = useState<string>("");
   const [editingTaskIndex, setEditingTaskIndex] = useState<number | null>(null);
   const [generatedPlan, setGeneratedPlan] = useState<{
     summary: string;
@@ -132,6 +137,15 @@ export default function CheckIn() {
     }));
   }
 
+  function updateTaskError(index: number, task: PlannedTask) {
+    const nextErrors = validateTask(task);
+    setTaskErrors((previous) => ({
+      ...previous,
+      [index]: nextErrors,
+    }));
+    return nextErrors;
+  }
+
   function addGeneratedTask() {
     setGeneratedPlan((previousPlan) => {
       const nextTasks = [
@@ -143,7 +157,12 @@ export default function CheckIn() {
           completed: false,
         },
       ];
-      setEditingTaskIndex(nextTasks.length - 1);
+      const newIndex = nextTasks.length - 1;
+      setTaskErrors((previous) => ({
+        ...previous,
+        [newIndex]: validateTask(nextTasks[newIndex]),
+      }));
+      setEditingTaskIndex(newIndex);
       return { ...previousPlan, tasks: nextTasks };
     });
   }
@@ -197,6 +216,21 @@ export default function CheckIn() {
     if (!generatedPlan.summary && generatedPlan.tasks.length === 0) {
       return;
     }
+
+    const invalidTask = generatedPlan.tasks.find((task) => {
+      const errors = validateTask(task);
+      return Object.keys(errors).length > 0;
+    });
+
+    if (invalidTask) {
+      setReviewError(
+        "Every task must include a title, description, and estimated time.",
+      );
+      return;
+    }
+
+    setReviewError("");
+
     await createDailyCheckIn(checkInValue);
 
     const user = await getCurrentUser();
@@ -379,13 +413,13 @@ export default function CheckIn() {
           )} */}
 
           {currentStep === 6 && (
-            <View style={styles.reviewContainer}>
+            <ScrollView
+              contentContainerStyle={styles.reviewScrollContent}
+              showsVerticalScrollIndicator={true}
+            >
               <Text style={styles.stepTitle}>Review updated plan</Text>
 
-              <ScrollView
-                contentContainerStyle={styles.reviewScrollContent}
-                showsVerticalScrollIndicator={true}
-              >
+              <View style={styles.reviewScrollContent}>
                 <View style={styles.summaryCard}>
                   {/* <Text style={styles.cardLabel}>AI summary</Text> */}
 
@@ -412,14 +446,35 @@ export default function CheckIn() {
                       style={styles.reviewTaskCard}
                     >
                       <View style={styles.taskCardHeader}>
-                        <Text style={styles.cardLabel}>
-                          {task.title || "Untitled task"}
-                        </Text>
+                        <View style={styles.taskContentColumn}>
+                          <Text style={styles.cardLabel}>
+                            {task.title || "Untitled task"}
+                          </Text>
+                          {!isEditing && (
+                            <>
+                              <Text style={styles.taskSummaryDescription}>
+                                {task.description || "No description added."}
+                              </Text>
+                              <Text style={styles.taskSummaryMeta}>
+                                {task.estimated_minutes || 30} min
+                              </Text>
+                            </>
+                          )}
+                        </View>
+
                         <View style={styles.taskActionRow}>
                           <TouchableOpacity
-                            onPress={() =>
-                              setEditingTaskIndex(isEditing ? null : index)
-                            }
+                            onPress={() => {
+                              if (isEditing) {
+                                const errors = updateTaskError(index, task);
+                                if (Object.keys(errors).length === 0) {
+                                  setEditingTaskIndex(null);
+                                }
+                                return;
+                              }
+
+                              setEditingTaskIndex(index);
+                            }}
                             style={styles.editTaskButton}
                           >
                             <Text style={styles.editTaskText}>
@@ -435,51 +490,82 @@ export default function CheckIn() {
                         </View>
                       </View>
 
-                      {isEditing ? (
-                        <View style={styles.taskEditor}>
-                          <Text style={styles.fieldLabel}>Title</Text>
-                          <TextField
-                            placeholder="Task title"
-                            value={task.title}
-                            onChangeText={(text) =>
-                              updateGeneratedTask(index, { title: text })
-                            }
-                          />
+                      {
+                        isEditing && (
+                          <View style={styles.taskEditor}>
+                            <Text style={styles.fieldLabel}>Title</Text>
+                            <TextField
+                              placeholder="Task title"
+                              value={task.title}
+                              error={taskErrors[index]?.title}
+                              onChangeText={(text) => {
+                                const nextTask = { ...task, title: text };
+                                updateTaskError(index, nextTask);
+                                updateGeneratedTask(index, { title: text });
+                              }}
+                            />
 
-                          <Text style={styles.fieldLabel}>Description</Text>
-                          <TextField
-                            placeholder="Task description"
-                            value={task.description}
-                            onChangeText={(text) =>
-                              updateGeneratedTask(index, { description: text })
-                            }
-                          />
+                            <Text style={styles.fieldLabel}>Description</Text>
+                            <TextField
+                              placeholder="Task description"
+                              value={task.description}
+                              error={taskErrors[index]?.description}
+                              onChangeText={(text) => {
+                                const nextTask = { ...task, description: text };
+                                updateTaskError(index, nextTask);
+                                updateGeneratedTask(index, {
+                                  description: text,
+                                });
+                              }}
+                            />
 
-                          <Text style={styles.fieldLabel}>Estimated time</Text>
-                          <TextField
-                            placeholder="Minutes"
-                            value={String(task.estimated_minutes ?? 30)}
-                            keyboardType="numeric"
-                            onChangeText={(text) =>
-                              updateGeneratedTask(index, {
-                                estimated_minutes: Number(text) || 0,
-                              })
-                            }
-                          />
-                        </View>
-                      ) : (
-                        <View style={styles.taskSummaryRow}>
-                          <Text style={styles.taskSummaryTitle}>
-                            {task.title || "Untitled task"}
-                          </Text>
-                          <Text style={styles.taskSummaryMeta}>
-                            {task.estimated_minutes || 30} min
-                          </Text>
-                        </View>
-                      )}
+                            <Text style={styles.fieldLabel}>
+                              Estimated time (minutes)
+                            </Text>
+                            <TextField
+                              placeholder="Minutes"
+                              value={String(task.estimated_minutes ?? 30)}
+                              error={taskErrors[index]?.estimated_minutes}
+                              keyboardType="numeric"
+                              onChangeText={(text) => {
+                                const nextTask = {
+                                  ...task,
+                                  estimated_minutes: Number(text) || 0,
+                                };
+                                updateTaskError(index, nextTask);
+                                updateGeneratedTask(index, {
+                                  estimated_minutes: Number(text) || 0,
+                                });
+                              }}
+                            />
+                          </View>
+                        )
+                        // : (
+                        //   <View style={styles.taskSummaryRow}>
+                        //     <View style={styles.taskSummaryContent}>
+                        //       <Text style={styles.taskSummaryTitle}>
+                        //         {task.title || "Untitled task"}
+                        //       </Text>
+                        //       <Text style={styles.taskSummaryDescription}>
+                        //         {task.description || "No description added."}
+                        //       </Text>
+                        //       <Text style={styles.taskSummaryFrequency}>
+                        //         {task.description ? "" : ""}
+                        //       </Text>
+                        //     </View>
+                        //     <Text style={styles.taskSummaryMeta}>
+                        //       {task.estimated_minutes || 30} min
+                        //     </Text>
+                        //   </View>
+                        // )
+                      }
                     </View>
                   );
                 })}
+
+                {reviewError ? (
+                  <Text style={styles.errorText}>{reviewError}</Text>
+                ) : null}
 
                 <View style={styles.actions}>
                   <Button
@@ -488,8 +574,8 @@ export default function CheckIn() {
                     onPress={saveReviewedPlan}
                   />
                 </View>
-              </ScrollView>
-            </View>
+              </View>
+            </ScrollView>
           )}
         </View>
       </KeyboardAvoidingView>
@@ -646,11 +732,16 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     justifyContent: "space-between",
     marginBottom: 4,
-    gap: 8,
+    gap: 12,
+  },
+  taskContentColumn: {
+    flex: 1,
+    gap: 4,
   },
   taskActionRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 8,
   },
   editTaskButton: {
@@ -682,15 +773,25 @@ const styles = StyleSheet.create({
   taskSummaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     paddingVertical: 6,
     gap: 12,
+  },
+  taskSummaryContent: {
+    flex: 1,
+    gap: 2,
   },
   taskSummaryTitle: {
     color: "#ecedee",
     fontSize: 14,
     fontWeight: "600",
-    flex: 1,
+    flexShrink: 1,
+    flexWrap: "wrap",
+  },
+  taskSummaryDescription: {
+    color: "#d4d4d8",
+    fontSize: 12,
+    lineHeight: 18,
     flexShrink: 1,
     flexWrap: "wrap",
   },
@@ -698,6 +799,7 @@ const styles = StyleSheet.create({
     color: "#a1a1aa",
     fontSize: 12,
     fontWeight: "600",
+    marginTop: 2,
   },
   taskEditor: {
     gap: 4,
