@@ -16,9 +16,16 @@ type Props = {
   onClose: () => void;
   title?: string;
   children?: React.ReactNode;
+  showCloseIcon: boolean;
 };
 
-export default function Modal({ visible, onClose, title, children }: Props) {
+export default function Modal({
+  visible,
+  onClose,
+  title,
+  children,
+  showCloseIcon,
+}: Props) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.98)).current;
 
@@ -69,17 +76,19 @@ export default function Modal({ visible, onClose, title, children }: Props) {
                   {title}
                 </ThemedText>
               ) : null}
-              <TouchableOpacity
-                onPress={onClose}
-                style={styles.closeButton}
-                accessibilityRole="button"
-                accessibilityLabel="Close modal"
-                hitSlop={{ top: 10, left: 10, right: 10, bottom: 10 }}
-              >
-                <View style={styles.closeIconBackground}>
-                  <MaterialIcons name="close" size={18} color="#A1A1AA" />
-                </View>
-              </TouchableOpacity>
+              {showCloseIcon && (
+                <TouchableOpacity
+                  onPress={onClose}
+                  style={styles.closeButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close modal"
+                  hitSlop={{ top: 10, left: 10, right: 10, bottom: 10 }}
+                >
+                  <View style={styles.closeIconBackground}>
+                    <MaterialIcons name="close" size={18} color="#A1A1AA" />
+                  </View>
+                </TouchableOpacity>
+              )}
             </View>
 
             <View style={styles.content}>{children}</View>
@@ -126,6 +135,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
+    textAlign: "center",
     marginRight: 8,
   },
   closeButton: {

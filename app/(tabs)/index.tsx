@@ -1,12 +1,11 @@
-import DailyProgress from "@/components/DailyProgress";
 import HabitsStreaksLayout from "@/components/HabitsStreaksLayout";
 import { ThemedText } from "@/components/themed-text";
 import DailyCheckInTile from "@/components/tiles/DailyCheckInTile";
 import EverythingCompletedTile from "@/components/tiles/EverythingCompletedTile";
+import GoalCard from "@/components/tiles/GoalCard";
 import TodaysPlan from "@/components/tiles/TodaysPlan";
 import WelcomeTile from "@/components/tiles/WelcomeTile";
 import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
 import DailyCheckinRecap from "@/components/ui/DailyCheckinRecap";
 import Header from "@/components/ui/Header";
 import Loader from "@/components/ui/Loader";
@@ -35,7 +34,7 @@ import {
   useRouter,
 } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Settings from "./Settings";
 
@@ -270,28 +269,19 @@ export default function Dashboard() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
         <Header handleSettingsClick={() => handleMenuClick("settings")} />
-        <DailyProgress completed={completedTasks} total={todaysTasks.length} />
+        {/* <DailyProgress completed={completedTasks} total={todaysTasks.length} /> */}
         <ScrollView style={{ marginBottom: -35 }}>
           <View style={{ padding: 5, paddingVertical: 5, marginBottom: 20 }}>
             {dailyCheckInComplete && completedTasks === todaysTasks.length && (
               <EverythingCompletedTile />
             )}
-            <Card>
-              <Text
-                style={{
-                  color: "#A1A1AA",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  lineHeight: 20,
-                  letterSpacing: 2,
-                  textAlign: "center",
-                  textTransform: "uppercase",
-                }}
-              >
-                {goal}
-              </Text>
-            </Card>
             {isFirstDay() && <WelcomeTile />}
+            <GoalCard
+              goal={goal}
+              completed={completedTasks}
+              total={todaysTasks.length}
+              onEdit={() => handleMenuClick("settings")}
+            />
             {!dailyCheckInComplete && !isFirstDay() && (
               <DailyCheckInTile
                 dailyCheckInComplete={dailyCheckInComplete}
@@ -346,6 +336,7 @@ export default function Dashboard() {
               visible={showCheckinModal}
               onClose={() => setShowCheckinModal(false)}
               title="Daily Check-in Available"
+              showCloseIcon={true}
             >
               <ThemedText>
                 A short 30-second daily check-in is available to help you
@@ -371,6 +362,7 @@ export default function Dashboard() {
 
             <Modal
               visible={showWelcomeModal}
+              showCloseIcon={false}
               onClose={() => setShowWelcomeModal(false)}
               title="Welcome to Aspyr"
             >
