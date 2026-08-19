@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { ThemedText } from "../themed-text";
 import Card from "../ui/Card";
 
 export default function HabitTile({
@@ -213,9 +214,13 @@ export default function HabitTile({
       </Pressable>
       <View>
         <View>
-          <Text style={styles.titleText}>
-            {`${monthMap.get(month)?.toUpperCase()} ${year.toString()}`}
-          </Text>
+          {/* <Text style={styles.titleText}> */}
+          <ThemedText
+            style={{ textAlign: "center", marginBottom: 8 }}
+            type="subtitle"
+          >{`${monthMap.get(month)?.toUpperCase()} ${year.toString()}`}</ThemedText>
+
+          {/* </Text> */}
         </View>
         <View style={styles.headerContainer}>
           {days.map((day, index) => (
@@ -297,10 +302,10 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: 14,
-    fontWeight: 600,
+    fontWeight: 700,
     paddingBottom: 5,
     letterSpacing: 1,
-    color: "#A1A1AA",
+    color: "#E6EEF8",
     textAlign: "center",
   },
   headerContainer: {

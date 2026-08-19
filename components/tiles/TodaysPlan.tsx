@@ -5,6 +5,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ThemedText } from "../themed-text";
 import Card from "../ui/Card";
 
 export default function TodaysPlan({
@@ -27,9 +28,10 @@ export default function TodaysPlan({
   return (
     <Card>
       <View style={styles.headerContainer}>
-        <Text style={[styles.titleText, { color: "#A1A1AA" }]}>
+        <ThemedText type="subtitle">TODAY'S PLAN</ThemedText>
+        {/* <Text style={[styles.titleText, { color: "#A1A1AA" }]}>
           TODAY'S PLAN
-        </Text>
+        </Text> */}
       </View>
       {aiSummary && dailyCheckInComplete && (
         <View

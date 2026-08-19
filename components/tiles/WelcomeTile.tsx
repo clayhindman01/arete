@@ -8,8 +8,8 @@ export default function WelcomeTile() {
     <Card style={styles.card}>
       <View style={styles.row}>
         <MaterialCommunityIcons
-          name="hand-heart"
-          size={36}
+          name="information"
+          size={32}
           color="rgba(59,130,246,0.9)"
         />
         <View style={styles.content}>
@@ -17,16 +17,16 @@ export default function WelcomeTile() {
 
           <View style={{ height: 8 }} />
 
-          <ThemedText style={styles.stepTitle}>01 — Act</ThemedText>
+          <ThemedText style={styles.stepTitle}>01 — Check in</ThemedText>
           <ThemedText style={styles.stepText}>
-            Follow your personalized daily plan.
+            Tell Aspyr how yesterday's plan went, and how today is going.
           </ThemedText>
 
           <View style={{ height: 6 }} />
 
-          <ThemedText style={styles.stepTitle}>02 — Check in</ThemedText>
+          <ThemedText style={styles.stepTitle}>02 — Act</ThemedText>
           <ThemedText style={styles.stepText}>
-            Tell Aspyr how your day went.
+            Follow your personallized daily plan.
           </ThemedText>
 
           <View style={{ height: 6 }} />
@@ -77,5 +77,6 @@ const styles = StyleSheet.create({
     color: "#A1A1AA",
     marginTop: 6,
     fontStyle: "italic",
+    fontWeight: "bold",
   },
 });
