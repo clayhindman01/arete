@@ -1,14 +1,14 @@
 import { CheckInValue } from "@/app/(tabs)/CheckIn";
 import {
-  Commitments,
-  PlanGeneration,
-  Routines,
-  Tasks,
+    Commitments,
+    PlanGeneration,
+    Routines,
+    Tasks,
 } from "@/types/PlanGeneration";
 import { supabase } from "./supabase";
 import {
-  getCurrentDateTimeWithTimezoneOffset,
-  getCurrentDateWithTimezoneOffset,
+    getCurrentDateTimeWithTimezoneOffset,
+    getCurrentDateWithTimezoneOffset,
 } from "./utils";
 
 export async function getProfile() {
@@ -425,6 +425,7 @@ export async function createDailyCheckIn(checkIn: CheckInValue) {
       user_id: user.id,
 
       difficulty_rating: checkIn.yesterdayDifficulty,
+      difficulty_note: checkIn.yesterdayDifficultyNote?.trim() || null,
       energy_level: checkIn.energyScale,
       available_time: checkIn.availableTime,
       notes: checkIn.todaysImpediments ?? null,

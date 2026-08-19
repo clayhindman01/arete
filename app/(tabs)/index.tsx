@@ -276,12 +276,6 @@ export default function Dashboard() {
               <EverythingCompletedTile />
             )}
             {isFirstDay() && <WelcomeTile />}
-            <GoalCard
-              goal={goal}
-              completed={completedTasks}
-              total={todaysTasks.length}
-              onEdit={() => handleMenuClick("settings")}
-            />
             {!dailyCheckInComplete && !isFirstDay() && (
               <DailyCheckInTile
                 dailyCheckInComplete={dailyCheckInComplete}
@@ -292,6 +286,13 @@ export default function Dashboard() {
                 }
               />
             )}
+            <GoalCard
+              goal={goal}
+              completed={completedTasks}
+              total={todaysTasks.length}
+              onEdit={() => handleMenuClick("settings")}
+            />
+
             <HabitsStreaksLayout
               refreshKey={calendarRefreshKey}
               statusOverrides={calendarStatusOverrides}

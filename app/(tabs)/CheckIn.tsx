@@ -20,7 +20,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type StepType = 1 | 2 | 3 | 4 | 5;
+type StepType = 1 | 1.5 | 2 | 3 | 4 | 5;
 export type YesterdayDifficulty =
   | "very-easy"
   | "easy"
@@ -47,6 +47,7 @@ export const ENERGY_SCALE = [
 
 export interface CheckInValue {
   yesterdayDifficulty: YesterdayDifficulty | null;
+  yesterdayDifficultyNote: string;
   energyScale: EnergyScale | null;
   availableTime: AvailableTime | null;
   todaysImpediments: string;
@@ -59,6 +60,7 @@ export default function CheckIn() {
   const params = useLocalSearchParams();
   const [checkInValue, setCheckInValue] = useState<CheckInValue>({
     yesterdayDifficulty: null,
+    yesterdayDifficultyNote: "",
     energyScale: null,
     availableTime: null,
     todaysImpediments: "",
@@ -66,8 +68,43 @@ export default function CheckIn() {
     tasksToRemove: "",
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [difficultyNoteError, setDifficultyNoteError] = useState<string>("");
 
   const router = useRouter();
+
+  function onDifficultyChange(value: YesterdayDifficulty) {
+    setCheckInValue({
+      ...checkInValue,
+      yesterdayDifficulty: value,
+    });
+    setDifficultyNoteError("");
+
+    if (value === "about-right") {
+      setCurrentStep(2);
+      return;
+    }
+
+    setCurrentStep(1.5 as StepType);
+  }
+
+  function continueFromDifficultyStep() {
+    const requiresNote =
+      checkInValue.yesterdayDifficulty !== null &&
+      checkInValue.yesterdayDifficulty !== "about-right";
+
+    if (!requiresNote) {
+      setCurrentStep(2);
+      return;
+    }
+
+    if (!checkInValue.yesterdayDifficultyNote.trim()) {
+      setDifficultyNoteError("Please tell us what was off about the plan.");
+      return;
+    }
+
+    setDifficultyNoteError("");
+    setCurrentStep(2);
+  }
 
   async function submitCheckIn(checkIn: any) {
     setIsLoading(true);
@@ -117,14 +154,37 @@ export default function CheckIn() {
               <ButtonGroup
                 options={YESTERDAY_DIFFICULTY_OPTIONS}
                 value={checkInValue?.yesterdayDifficulty}
-                onChange={(value: YesterdayDifficulty) => {
+                onChange={onDifficultyChange}
+              />
+            </View>
+          )}
+
+          {currentStep === 1.5 && (
+            <View style={styles.buttonGap}>
+              <Text style={styles.stepTitle}>What was off about the plan?</Text>
+
+              <TextField
+                placeholder="Tell us what felt off about yesterday's plan"
+                value={checkInValue.yesterdayDifficultyNote}
+                onChangeText={(text) => {
                   setCheckInValue({
                     ...checkInValue,
-                    yesterdayDifficulty: value,
+                    yesterdayDifficultyNote: text,
                   });
-                  setCurrentStep(2);
+                  if (difficultyNoteError) {
+                    setDifficultyNoteError("");
+                  }
                 }}
+                error={difficultyNoteError}
               />
+
+              <View style={styles.actions}>
+                <Button
+                  label="Next"
+                  type="primary"
+                  onPress={continueFromDifficultyStep}
+                />
+              </View>
             </View>
           )}
           {currentStep === 2 && (
@@ -240,12 +300,17 @@ function CheckInHeader({
   const router = useRouter();
   const { colors } = useTheme();
   const handleBack = () => {
+    if (currentStep === 1.5) {
+      setCurrentStep(1 as StepType);
+      return;
+    }
+
     if (currentStep > 1) {
       setCurrentStep((currentStep - 1) as StepType);
       return;
-    } else {
-      router.back();
     }
+
+    router.back();
   };
   return (
     <View style={styles.header}>

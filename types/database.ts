@@ -49,6 +49,8 @@ export type Database = {
       check_ins: {
         Row: {
           created_at: string | null;
+          difficulty_note: string | null;
+          difficulty_rating: string | null;
           energy_level: number | null;
           id: string;
           motivation_level: number | null;
@@ -58,6 +60,8 @@ export type Database = {
         };
         Insert: {
           created_at?: string | null;
+          difficulty_note?: string | null;
+          difficulty_rating?: string | null;
           energy_level?: number | null;
           id?: string;
           motivation_level?: number | null;
@@ -67,6 +71,8 @@ export type Database = {
         };
         Update: {
           created_at?: string | null;
+          difficulty_note?: string | null;
+          difficulty_rating?: string | null;
           energy_level?: number | null;
           id?: string;
           motivation_level?: number | null;

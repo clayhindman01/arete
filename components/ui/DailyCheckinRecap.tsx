@@ -72,6 +72,14 @@ export default function DailyCheckinRecap({
             {yesterdaysDifficultyMap.get(checkinData?.difficulty_rating ?? "")}
           </Text>
         </View>
+
+        {checkinData?.difficulty_note ? (
+          <View style={[styles.button, styles.buttonSelected]}>
+            <Text style={[styles.buttonText, styles.buttonTextUnselected]}>
+              {checkinData.difficulty_note}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.buttonGap}>
