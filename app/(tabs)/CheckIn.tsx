@@ -13,6 +13,7 @@ import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -20,7 +21,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type StepType = 1 | 1.5 | 2 | 3 | 4 | 5;
+type StepType = 1 | 1.5 | 2 | 3 | 4 | 5 | 6;
 export type YesterdayDifficulty =
   | "very-easy"
   | "easy"
@@ -55,6 +56,14 @@ export interface CheckInValue {
   tasksToRemove?: string;
 }
 
+type PlannedTask = {
+  id?: string;
+  title: string;
+  description: string;
+  estimated_minutes: number;
+  completed?: boolean;
+};
+
 export default function CheckIn() {
   const [currentStep, setCurrentStep] = useState<StepType>(1);
   const params = useLocalSearchParams();
@@ -69,6 +78,14 @@ export default function CheckIn() {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [difficultyNoteError, setDifficultyNoteError] = useState<string>("");
+  const [editingTaskIndex, setEditingTaskIndex] = useState<number | null>(null);
+  const [generatedPlan, setGeneratedPlan] = useState<{
+    summary: string;
+    tasks: PlannedTask[];
+  }>({
+    summary: "",
+    tasks: [],
+  });
 
   const router = useRouter();
 
@@ -106,9 +123,44 @@ export default function CheckIn() {
     setCurrentStep(2);
   }
 
+  function updateGeneratedTask(index: number, updates: Partial<PlannedTask>) {
+    setGeneratedPlan((previousPlan) => ({
+      ...previousPlan,
+      tasks: previousPlan.tasks.map((task, taskIndex) =>
+        taskIndex === index ? { ...task, ...updates } : task,
+      ),
+    }));
+  }
+
+  function addGeneratedTask() {
+    setGeneratedPlan((previousPlan) => {
+      const nextTasks = [
+        ...previousPlan.tasks,
+        {
+          title: "",
+          description: "",
+          estimated_minutes: 30,
+          completed: false,
+        },
+      ];
+      setEditingTaskIndex(nextTasks.length - 1);
+      return { ...previousPlan, tasks: nextTasks };
+    });
+  }
+
+  function removeGeneratedTask(index: number) {
+    setGeneratedPlan((previousPlan) => ({
+      ...previousPlan,
+      tasks: previousPlan.tasks.filter((_, taskIndex) => taskIndex !== index),
+    }));
+
+    if (editingTaskIndex === index) {
+      setEditingTaskIndex(null);
+    }
+  }
+
   async function submitCheckIn(checkIn: any) {
     setIsLoading(true);
-    await createDailyCheckIn(checkIn);
 
     const user = await getCurrentUser();
 
@@ -117,17 +169,58 @@ export default function CheckIn() {
       checkIn,
     })
       .then(async (res) => {
-        console.log("Adaptive Plan:", JSON.parse(res.text));
-        await saveAdaptiveDailyPlan(JSON.parse(res.text), user.id);
-      })
-      .then(() => {
-        setCurrentStep(1);
+        const parsedPlan = JSON.parse(res.text);
+        const normalizedPlan = {
+          summary: parsedPlan.summary ?? "",
+          tasks: Array.isArray(parsedPlan.tasks)
+            ? parsedPlan.tasks.map((task: any) => ({
+                id: task.id,
+                title: task.title ?? "",
+                description: task.description ?? "",
+                estimated_minutes: Number(task.estimated_minutes ?? 30),
+                completed: Boolean(task.completed),
+              }))
+            : [],
+        };
+
+        setGeneratedPlan(normalizedPlan);
+        setCurrentStep(6);
         setIsLoading(false);
-        router.replace({
-          pathname: "/(tabs)",
-          params: { dailyCheckInCompleted: "true", shouldShowIntro: "false" },
-        });
+      })
+      .catch((error) => {
+        console.error("Error generating adaptive plan:", error);
+        setIsLoading(false);
       });
+  }
+
+  async function saveReviewedPlan() {
+    if (!generatedPlan.summary && generatedPlan.tasks.length === 0) {
+      return;
+    }
+    await createDailyCheckIn(checkInValue);
+
+    const user = await getCurrentUser();
+    await saveAdaptiveDailyPlan(
+      {
+        summary: generatedPlan.summary,
+        tasks: generatedPlan.tasks
+          .filter((task) => task.title.trim() || task.description.trim())
+          .map((task) => ({
+            ...task,
+            title: task.title.trim() || "Untitled task",
+            description: task.description.trim(),
+            estimated_minutes: Number(task.estimated_minutes) || 30,
+            completed: Boolean(task.completed),
+          })),
+      },
+      user.id,
+    );
+
+    setCurrentStep(1);
+    router.replace({
+      pathname: "/(tabs)",
+      params: { dailyCheckInCompleted: "true", shouldShowIntro: "false" },
+    });
   }
 
   if (isLoading) {
@@ -243,13 +336,13 @@ export default function CheckIn() {
                 <Button
                   label="Next"
                   type="primary"
-                  onPress={() => setCurrentStep(5)}
+                  onPress={() => submitCheckIn(checkInValue)}
                 />
               </View>
             </View>
           )}
 
-          {currentStep === 5 && (
+          {/* {currentStep === 5 && (
             <View style={styles.buttonGap}>
               <Text style={styles.stepTitle}>
                 Any specific changes you would like to make?
@@ -283,6 +376,118 @@ export default function CheckIn() {
                 />
               </View>
             </View>
+          )} */}
+
+          {currentStep === 6 && (
+            <View style={styles.reviewContainer}>
+              <Text style={styles.stepTitle}>Review updated plan</Text>
+
+              <ScrollView
+                contentContainerStyle={styles.reviewScrollContent}
+                showsVerticalScrollIndicator={true}
+              >
+                <View style={styles.summaryCard}>
+                  {/* <Text style={styles.cardLabel}>AI summary</Text> */}
+
+                  <Text style={styles.stepSubtitle}>
+                    {generatedPlan.summary}
+                  </Text>
+                </View>
+
+                <View style={styles.reviewHeaderRow}>
+                  <Text style={styles.stepSubtitle}>Checklist</Text>
+                  <Button
+                    label="Add task"
+                    type="secondary"
+                    onPress={addGeneratedTask}
+                  />
+                </View>
+
+                {generatedPlan.tasks.map((task, index) => {
+                  const isEditing = editingTaskIndex === index;
+
+                  return (
+                    <View
+                      key={`task-card-${index}`}
+                      style={styles.reviewTaskCard}
+                    >
+                      <View style={styles.taskCardHeader}>
+                        <Text style={styles.cardLabel}>Task {index + 1}</Text>
+                        <View style={styles.taskActionRow}>
+                          <TouchableOpacity
+                            onPress={() =>
+                              setEditingTaskIndex(isEditing ? null : index)
+                            }
+                            style={styles.editTaskButton}
+                          >
+                            <Text style={styles.editTaskText}>
+                              {isEditing ? "Done" : "Edit"}
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => removeGeneratedTask(index)}
+                            style={styles.removeTaskButton}
+                          >
+                            <Text style={styles.removeTaskText}>Remove</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+
+                      {isEditing ? (
+                        <View style={styles.taskEditor}>
+                          <Text style={styles.fieldLabel}>Title</Text>
+                          <TextField
+                            placeholder="Task title"
+                            value={task.title}
+                            onChangeText={(text) =>
+                              updateGeneratedTask(index, { title: text })
+                            }
+                          />
+
+                          <Text style={styles.fieldLabel}>Description</Text>
+                          <TextField
+                            placeholder="Task description"
+                            value={task.description}
+                            onChangeText={(text) =>
+                              updateGeneratedTask(index, { description: text })
+                            }
+                          />
+
+                          <Text style={styles.fieldLabel}>Estimated time</Text>
+                          <TextField
+                            placeholder="Minutes"
+                            value={String(task.estimated_minutes ?? 30)}
+                            keyboardType="numeric"
+                            onChangeText={(text) =>
+                              updateGeneratedTask(index, {
+                                estimated_minutes: Number(text) || 0,
+                              })
+                            }
+                          />
+                        </View>
+                      ) : (
+                        <View style={styles.taskSummaryRow}>
+                          <Text style={styles.taskSummaryTitle}>
+                            {task.title || "Untitled task"}
+                          </Text>
+                          <Text style={styles.taskSummaryMeta}>
+                            {task.estimated_minutes || 30} min
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
+
+                <View style={styles.actions}>
+                  <Button
+                    label="Save plan"
+                    type="primary"
+                    onPress={saveReviewedPlan}
+                  />
+                </View>
+              </ScrollView>
+            </View>
           )}
         </View>
       </KeyboardAvoidingView>
@@ -300,6 +505,11 @@ function CheckInHeader({
   const router = useRouter();
   const { colors } = useTheme();
   const handleBack = () => {
+    if (currentStep === 6) {
+      setCurrentStep(5 as StepType);
+      return;
+    }
+
     if (currentStep === 1.5) {
       setCurrentStep(1 as StepType);
       return;
@@ -385,6 +595,105 @@ const styles = StyleSheet.create({
   },
   buttonGap: {
     gap: 10,
+  },
+  reviewContainer: {
+    flex: 1,
+  },
+  reviewScrollContent: {
+    paddingBottom: 32,
+  },
+  reviewHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  summaryCard: {
+    padding: 12,
+    marginBottom: 12,
+  },
+  cardLabel: {
+    color: "#ecedee",
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 1,
+    marginBottom: 8,
+    textTransform: "uppercase",
+  },
+  fieldLabel: {
+    color: "#a1a1aa",
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+    marginBottom: 4,
+    marginTop: 8,
+  },
+  reviewTaskCard: {
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.3)",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    gap: 4,
+    backgroundColor: "rgba(15, 23, 42, 0.4)",
+  },
+  taskCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  taskActionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  editTaskButton: {
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.5)",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  editTaskText: {
+    color: "#e2e8f0",
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+  },
+  removeTaskButton: {
+    borderWidth: 1,
+    borderColor: "rgba(248, 113, 113, 0.6)",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  removeTaskText: {
+    color: "#fca5a5",
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+  },
+  taskSummaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 6,
+    gap: 12,
+  },
+  taskSummaryTitle: {
+    color: "#ecedee",
+    fontSize: 14,
+    fontWeight: "600",
+    flex: 1,
+  },
+  taskSummaryMeta: {
+    color: "#a1a1aa",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  taskEditor: {
+    gap: 4,
   },
   actions: {
     marginTop: 24,
