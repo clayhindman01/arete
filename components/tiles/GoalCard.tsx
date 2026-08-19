@@ -1,4 +1,5 @@
 import Card from "@/components/ui/Card";
+import ProgressRing from "@/components/ui/ProgressRing";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -25,16 +26,14 @@ export default function GoalCard({
       </View>
 
       <View style={styles.right}>
-        <View style={styles.progressBox}>
-          <Text style={styles.progressValue}>
-            {completed}/{total}
-          </Text>
-          <View style={[styles.progressBar, { backgroundColor: "#1A1D24" }]}>
-            <View
-              style={[styles.progressFill, { width: `${progress * 100}%` }]}
-            />
-          </View>
-        </View>
+        <ProgressRing
+          size={56}
+          strokeWidth={6}
+          progress={progress}
+          color="#b89b5e"
+          bgColor="#1A1D24"
+          text={`${Math.round(progress * 100)}%`}
+        />
 
         <TouchableOpacity
           style={styles.editBtn}
@@ -56,7 +55,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 12,
     paddingHorizontal: 14,
-    backgroundColor: "#0F1720",
+    // backgroundColor: "#0F1720",
     borderColor: "#232833",
   },
   left: {
@@ -70,8 +69,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   right: {
-    width: 140,
-    alignItems: "flex-end",
+    width: "35%",
+    alignItems: "center",
+    gap: 15,
+    justifyContent: "flex-end",
+    flexDirection: "row",
   },
   progressBox: {
     width: "100%",
