@@ -1,7 +1,6 @@
 import Button from "@/components/ui/Button";
 import ButtonGroup from "@/components/ui/ButtonGroup";
 import Loader from "@/components/ui/Loader";
-import PlanComponent from "@/components/ui/PlanComponent";
 import TextField from "@/components/ui/TextField";
 import { generatePlan } from "@/lib/ai";
 import { logEvent } from "@/lib/analytics";
@@ -51,6 +50,141 @@ export default function Onboarding() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [selections, setSelections] = useState<Record<number, boolean[][]>>({});
+  const [editingTaskKey, setEditingTaskKey] = useState<string | null>(null);
+
+  const synchronizeSelections = (nextPlan: PlanGeneration) => {
+    setSelections((prev) => {
+      const next: Record<number, boolean[][]> = {};
+
+      nextPlan.commitments.forEach((commitment, commitmentIndex) => {
+        next[commitmentIndex] = commitment.routines.map(
+          (routine, routineIndex) => {
+            const previousRow = prev[commitmentIndex]?.[routineIndex] ?? [];
+            return routine.tasks.map(
+              (_, taskIndex) => previousRow[taskIndex] ?? true,
+            );
+          },
+        );
+      });
+
+      return next;
+    });
+  };
+
+  const updatePlanTask = (
+    commitmentIndex: number,
+    routineIndex: number,
+    taskIndex: number,
+    updates: Partial<Commitments["routines"][number]["tasks"][number]>,
+  ) => {
+    setPlanData((previousPlan) => {
+      if (!previousPlan) return previousPlan;
+
+      const nextPlan: PlanGeneration = {
+        ...previousPlan,
+        commitments: previousPlan.commitments.map((commitment, ci) =>
+          ci !== commitmentIndex
+            ? commitment
+            : {
+                ...commitment,
+                routines: commitment.routines.map((routine, ri) =>
+                  ri !== routineIndex
+                    ? routine
+                    : {
+                        ...routine,
+                        tasks: routine.tasks.map((task, ti) =>
+                          ti !== taskIndex ? task : { ...task, ...updates },
+                        ),
+                      },
+                ),
+              },
+        ),
+      };
+
+      synchronizeSelections(nextPlan);
+      return nextPlan;
+    });
+  };
+
+  const addPlanTask = (commitmentIndex: number, routineIndex: number) => {
+    setPlanData((previousPlan) => {
+      if (!previousPlan) return previousPlan;
+
+      const nextPlan: PlanGeneration = {
+        ...previousPlan,
+        commitments: previousPlan.commitments.map((commitment, ci) =>
+          ci !== commitmentIndex
+            ? commitment
+            : {
+                ...commitment,
+                routines: commitment.routines.map((routine, ri) =>
+                  ri !== routineIndex
+                    ? routine
+                    : {
+                        ...routine,
+                        tasks: [
+                          ...routine.tasks,
+                          {
+                            id: undefined,
+                            title: "",
+                            description: "",
+                            estimated_minutes: 30,
+                            one_word_description: "",
+                            completed: false,
+                          },
+                        ],
+                      },
+                ),
+              },
+        ),
+      };
+
+      const taskCount =
+        nextPlan.commitments[commitmentIndex].routines[routineIndex].tasks
+          .length;
+      setEditingTaskKey(`${commitmentIndex}-${routineIndex}-${taskCount - 1}`);
+      synchronizeSelections(nextPlan);
+      return nextPlan;
+    });
+  };
+
+  const removePlanTask = (
+    commitmentIndex: number,
+    routineIndex: number,
+    taskIndex: number,
+  ) => {
+    setPlanData((previousPlan) => {
+      if (!previousPlan) return previousPlan;
+
+      const nextPlan: PlanGeneration = {
+        ...previousPlan,
+        commitments: previousPlan.commitments.map((commitment, ci) =>
+          ci !== commitmentIndex
+            ? commitment
+            : {
+                ...commitment,
+                routines: commitment.routines.map((routine, ri) =>
+                  ri !== routineIndex
+                    ? routine
+                    : {
+                        ...routine,
+                        tasks: routine.tasks.filter(
+                          (_, ti) => ti !== taskIndex,
+                        ),
+                      },
+                ),
+              },
+        ),
+      };
+
+      synchronizeSelections(nextPlan);
+      return nextPlan;
+    });
+
+    if (editingTaskKey === `${commitmentIndex}-${routineIndex}-${taskIndex}`) {
+      setEditingTaskKey(null);
+    }
+  };
 
   const validateStep = (step: number): boolean => {
     const newErrors: typeof errors = {};
@@ -101,6 +235,51 @@ export default function Onboarding() {
         handleGeneratePlan(nextFormData);
       }
     }
+  };
+
+  const formatDays = (days: string[]) => {
+    if (days.length === 0) return "";
+    if (days.length === 1) return days[0];
+    return `${days.slice(0, -1).join(", ")} and ${days.slice(-1)[0]}`;
+  };
+
+  const getDayOfWeekValues = (days: string[]) => {
+    const formattedDays: string[] = [];
+    for (const day of days) {
+      switch (day) {
+        case "M":
+          formattedDays.push("Monday");
+          break;
+        case "T":
+          formattedDays.push("Tuesday");
+          break;
+        case "W":
+          formattedDays.push("Wednesday");
+          break;
+        case "Th":
+          formattedDays.push("Thursday");
+          break;
+        case "F":
+          formattedDays.push("Friday");
+          break;
+        case "S":
+          formattedDays.push("Saturday");
+          break;
+        case "Su":
+          formattedDays.push("Sunday");
+          break;
+      }
+    }
+    return formattedDays;
+  };
+
+  const formatRoutineFrequency = (routine: any) => {
+    if (routine.frequency === "daily") {
+      return "Daily";
+    }
+
+    const days = getDayOfWeekValues(routine.days_of_week || []);
+    return `Weekly on ${formatDays(days)}`;
   };
 
   const handleGeneratePlan = async (data: OnboardingData = formData) => {
@@ -292,26 +471,171 @@ export default function Onboarding() {
 
           {currentStep === 6 &&
             (planData ? (
-              <View>
+              <View style={styles.reviewContainer}>
                 <Text style={styles.stepTitle}>EDIT PLAN</Text>
-                {/* <Text style={styles.goalText}>{planData.goal.title}</Text> */}
                 <Text style={styles.goalText}>
-                  De-select tasks that you do not think would be benefitial to
-                  help you reach your goal.
+                  Review your suggestions and make any edits before creating the
+                  plan.
                 </Text>
                 <Text style={styles.subText}>
                   This is your plan, so make it work for you!
                 </Text>
-                {planData?.commitments.map((commitment, index) => (
-                  <PlanComponent
-                    key={index}
-                    commitment={commitment}
-                    commitmentIndex={index}
-                    onChange={(ci, selection) => {
-                      setSelections((prev) => ({ ...prev, [ci]: selection }));
-                    }}
-                  />
-                ))}
+
+                <ScrollView
+                  contentContainerStyle={styles.reviewScrollContent}
+                  showsVerticalScrollIndicator={true}
+                >
+                  {planData.commitments.map((commitment, commitmentIndex) => (
+                    <View
+                      key={`commitment-${commitmentIndex}`}
+                      style={styles.commitmentCard}
+                    >
+                      <Text style={styles.commitmentTitle}>
+                        {commitment.title}
+                      </Text>
+
+                      {commitment.routines.map((routine, routineIndex) => (
+                        <View
+                          key={`routine-${routineIndex}`}
+                          style={styles.routineCard}
+                        >
+                          <View style={styles.reviewHeaderRow}>
+                            <Text style={styles.routineTitle}>
+                              {routine.title}
+                            </Text>
+                            <Button
+                              label="Add task"
+                              type="secondary"
+                              onPress={() =>
+                                addPlanTask(commitmentIndex, routineIndex)
+                              }
+                            />
+                          </View>
+
+                          {routine.tasks.map((task, taskIndex) => {
+                            const taskKey = `${commitmentIndex}-${routineIndex}-${taskIndex}`;
+                            const isEditing = editingTaskKey === taskKey;
+
+                            return (
+                              <View key={taskKey} style={styles.reviewTaskCard}>
+                                <View style={styles.taskCardHeader}>
+                                  <Text style={styles.cardLabel}>
+                                    Task {taskIndex + 1}
+                                  </Text>
+                                  <View style={styles.taskActionRow}>
+                                    <TouchableOpacity
+                                      onPress={() =>
+                                        setEditingTaskKey(
+                                          isEditing ? null : taskKey,
+                                        )
+                                      }
+                                      style={styles.editTaskButton}
+                                    >
+                                      <Text style={styles.editTaskText}>
+                                        {isEditing ? "Done" : "Edit"}
+                                      </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                      onPress={() =>
+                                        removePlanTask(
+                                          commitmentIndex,
+                                          routineIndex,
+                                          taskIndex,
+                                        )
+                                      }
+                                      style={styles.removeTaskButton}
+                                    >
+                                      <Text style={styles.removeTaskText}>
+                                        Remove
+                                      </Text>
+                                    </TouchableOpacity>
+                                  </View>
+                                </View>
+
+                                {isEditing ? (
+                                  <View style={styles.taskEditor}>
+                                    <Text style={styles.fieldLabel}>Title</Text>
+                                    <TextField
+                                      placeholder="Task title"
+                                      value={task.title}
+                                      onChangeText={(text) =>
+                                        updatePlanTask(
+                                          commitmentIndex,
+                                          routineIndex,
+                                          taskIndex,
+                                          { title: text },
+                                        )
+                                      }
+                                    />
+
+                                    <Text style={styles.fieldLabel}>
+                                      Description
+                                    </Text>
+                                    <TextField
+                                      placeholder="Task description"
+                                      value={task.description}
+                                      onChangeText={(text) =>
+                                        updatePlanTask(
+                                          commitmentIndex,
+                                          routineIndex,
+                                          taskIndex,
+                                          { description: text },
+                                        )
+                                      }
+                                    />
+
+                                    <Text style={styles.fieldLabel}>
+                                      Estimated time
+                                    </Text>
+                                    <TextField
+                                      placeholder="Minutes"
+                                      value={String(
+                                        task.estimated_minutes ?? 30,
+                                      )}
+                                      keyboardType="numeric"
+                                      onChangeText={(text) =>
+                                        updatePlanTask(
+                                          commitmentIndex,
+                                          routineIndex,
+                                          taskIndex,
+                                          {
+                                            estimated_minutes:
+                                              Number(text) || 0,
+                                          },
+                                        )
+                                      }
+                                    />
+
+                                    <Text style={styles.fieldLabel}>
+                                      Frequency
+                                    </Text>
+                                    <Text style={styles.taskFrequencyValue}>
+                                      {formatRoutineFrequency(routine)}
+                                    </Text>
+                                  </View>
+                                ) : (
+                                  <View style={styles.taskSummaryRow}>
+                                    <View style={styles.taskSummaryContent}>
+                                      <Text style={styles.taskSummaryTitle}>
+                                        {task.title || "Untitled task"}
+                                      </Text>
+                                      <Text style={styles.taskSummaryFrequency}>
+                                        {formatRoutineFrequency(routine)}
+                                      </Text>
+                                    </View>
+                                    <Text style={styles.taskSummaryMeta}>
+                                      {task.estimated_minutes || 30} min
+                                    </Text>
+                                  </View>
+                                )}
+                              </View>
+                            );
+                          })}
+                        </View>
+                      ))}
+                    </View>
+                  ))}
+                </ScrollView>
               </View>
             ) : (
               <>
@@ -418,6 +742,138 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     justifyContent: "center",
+  },
+  reviewContainer: {
+    flex: 1,
+  },
+  reviewScrollContent: {
+    paddingBottom: 36,
+  },
+  commitmentCard: {
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.3)",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    backgroundColor: "rgba(15, 23, 42, 0.4)",
+  },
+  commitmentTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#ecedee",
+    marginBottom: 12,
+  },
+  routineCard: {
+    marginBottom: 12,
+  },
+  routineTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#a1a1aa",
+  },
+  reviewHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  reviewTaskCard: {
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.3)",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    gap: 4,
+    backgroundColor: "rgba(15, 23, 42, 0.3)",
+  },
+  taskCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  taskActionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  taskEditor: {
+    gap: 4,
+  },
+  fieldLabel: {
+    color: "#a1a1aa",
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+    marginBottom: 4,
+    marginTop: 8,
+  },
+  cardLabel: {
+    color: "#ecedee",
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 1,
+    marginBottom: 8,
+    textTransform: "uppercase",
+  },
+  editTaskButton: {
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.5)",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  editTaskText: {
+    color: "#e2e8f0",
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+  },
+  removeTaskButton: {
+    borderWidth: 1,
+    borderColor: "rgba(248, 113, 113, 0.6)",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  removeTaskText: {
+    color: "#fca5a5",
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+  },
+  taskSummaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 6,
+    gap: 12,
+  },
+  taskSummaryContent: {
+    flex: 1,
+    gap: 2,
+  },
+  taskSummaryTitle: {
+    color: "#ecedee",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  taskSummaryFrequency: {
+    color: "#a1a1aa",
+    fontSize: 11,
+    fontWeight: "500",
+    letterSpacing: 0.5,
+  },
+  taskSummaryMeta: {
+    color: "#a1a1aa",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  taskFrequencyValue: {
+    color: "#ecedee",
+    fontSize: 13,
+    fontWeight: "600",
+    letterSpacing: 0.5,
   },
   card: {
     flex: 1,

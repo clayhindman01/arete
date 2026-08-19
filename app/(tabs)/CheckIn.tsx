@@ -412,7 +412,9 @@ export default function CheckIn() {
                       style={styles.reviewTaskCard}
                     >
                       <View style={styles.taskCardHeader}>
-                        <Text style={styles.cardLabel}>Task {index + 1}</Text>
+                        <Text style={styles.cardLabel}>
+                          {task.title || "Untitled task"}
+                        </Text>
                         <View style={styles.taskActionRow}>
                           <TouchableOpacity
                             onPress={() =>
@@ -619,6 +621,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 8,
     textTransform: "uppercase",
+    flexShrink: 1,
+    flexWrap: "wrap",
   },
   fieldLabel: {
     color: "#a1a1aa",
@@ -639,9 +643,10 @@ const styles = StyleSheet.create({
   },
   taskCardHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     marginBottom: 4,
+    gap: 8,
   },
   taskActionRow: {
     flexDirection: "row",
@@ -686,6 +691,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     flex: 1,
+    flexShrink: 1,
+    flexWrap: "wrap",
   },
   taskSummaryMeta: {
     color: "#a1a1aa",
