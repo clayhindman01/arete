@@ -9,16 +9,23 @@ export default function DailyCheckInTile({
   setDailyCheckInComplete,
   todaysTasks,
   handleDailyCheckinMenuPress,
+  onStartPress,
 }: {
   dailyCheckInComplete: boolean;
   setDailyCheckInComplete: (complete: boolean) => void;
   todaysTasks: any;
   handleDailyCheckinMenuPress: () => void;
+  onStartPress?: () => void;
 }) {
   const { colors } = useTheme();
   const router = useRouter();
 
   const handlePress = () => {
+    if (onStartPress) {
+      onStartPress();
+      return;
+    }
+
     router.push({
       pathname: "/(tabs)/CheckIn",
       params: {

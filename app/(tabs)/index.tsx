@@ -1,12 +1,16 @@
 import DailyProgress from "@/components/DailyProgress";
 import HabitsStreaksLayout from "@/components/HabitsStreaksLayout";
+import { ThemedText } from "@/components/themed-text";
 import DailyCheckInTile from "@/components/tiles/DailyCheckInTile";
 import EverythingCompletedTile from "@/components/tiles/EverythingCompletedTile";
 import TodaysPlan from "@/components/tiles/TodaysPlan";
+import WelcomeTile from "@/components/tiles/WelcomeTile";
+import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import DailyCheckinRecap from "@/components/ui/DailyCheckinRecap";
 import Header from "@/components/ui/Header";
 import Loader from "@/components/ui/Loader";
+import Modal from "@/components/ui/Modal";
 import PulseText from "@/components/ui/PulseText";
 import SlideUpMenu from "@/components/ui/SlideUpMenu";
 import { getCurrentUser } from "@/lib/auth";
@@ -24,11 +28,20 @@ import {
 import { getCurrentDateWithTimezoneOffset } from "@/lib/utils";
 import { Tasks } from "@/types/PlanGeneration";
 import * as Notifications from "expo-notifications";
-import { Redirect, useFocusEffect, useLocalSearchParams } from "expo-router";
+import {
+  Redirect,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Settings from "./Settings";
+
+// Session-scoped flags to ensure modals only appear once per app session
+let hasShownCheckinModalThisSession = false;
+let hasShownWelcomeModalThisSession = false;
 
 type MenuOption = "settings" | "checkin" | "date";
 
@@ -52,14 +65,12 @@ export default function Dashboard() {
   >({});
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [selectedMenu, setSelectedMenu] = useState<MenuOption>();
+  const [showCheckinModal, setShowCheckinModal] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [isFirstDayFlag, setIsFirstDayFlag] = useState(false);
+  const router = useRouter();
 
   const showIntro = shouldShowIntro === undefined ? "true" : shouldShowIntro;
-  console.log(
-    "showIntro",
-    showIntro,
-    "dailyCheckInCompleted",
-    dailyCheckInCompleted,
-  );
 
   const deriveCalendarStatus = (tasks: Tasks[] | null | undefined) => {
     if (!tasks || tasks.length === 0) {
@@ -159,12 +170,66 @@ export default function Dashboard() {
 
   useFocusEffect(
     useCallback(() => {
-      setIsLoading(true);
-      hasCompletedDailyCheckInToday().then((completed) => {
-        setDailyCheckInComplete(completed);
-      });
-      fetchActivePlan().then(() => setIsLoading(false));
-    }, []),
+      let active = true;
+
+      const run = async () => {
+        try {
+          setIsLoading(true);
+
+          const completed = await hasCompletedDailyCheckInToday();
+          if (!active) return;
+          setDailyCheckInComplete(completed);
+
+          await fetchActivePlan();
+          if (!active) return;
+          setIsLoading(false);
+
+          if (!completed) {
+            try {
+              const user = await getCurrentUser();
+              let sameDay = false;
+              if (user && user.created_at) {
+                const created = new Date(user.created_at);
+                const now = new Date();
+                sameDay =
+                  created.getUTCFullYear() === now.getUTCFullYear() &&
+                  created.getUTCMonth() === now.getUTCMonth() &&
+                  created.getUTCDate() === now.getUTCDate();
+              }
+              setIsFirstDayFlag(sameDay);
+
+              if (sameDay && showIntro === "false") {
+                if (!hasShownWelcomeModalThisSession) {
+                  setShowWelcomeModal(true);
+                  hasShownWelcomeModalThisSession = true;
+                }
+              } else if (!sameDay) {
+                if (!hasShownCheckinModalThisSession) {
+                  setShowCheckinModal(true);
+                  hasShownCheckinModalThisSession = true;
+                }
+              }
+            } catch (err) {
+              console.warn("Error checking user creation date", err);
+              // Fallback: show checkin modal if not completed — only once per session
+              if (!hasShownCheckinModalThisSession) {
+                setShowCheckinModal(true);
+                hasShownCheckinModalThisSession = true;
+              }
+            }
+          }
+        } catch (err) {
+          console.error(err);
+          setIsLoading(false);
+        }
+      };
+
+      run();
+
+      return () => {
+        active = false;
+      };
+    }, [showIntro]),
   );
 
   useEffect(() => {
@@ -185,7 +250,7 @@ export default function Dashboard() {
 
   // TODO: Implement logic to determine if it's the first day of the plan. For now, returning false as a placeholder.
   const isFirstDay = () => {
-    return false;
+    return isFirstDayFlag;
   };
 
   if (isLoading && showIntro === "true") {
@@ -226,20 +291,17 @@ export default function Dashboard() {
                 {goal}
               </Text>
             </Card>
+            {isFirstDay() && <WelcomeTile />}
             {!dailyCheckInComplete && !isFirstDay() && (
               <DailyCheckInTile
                 dailyCheckInComplete={dailyCheckInComplete}
                 setDailyCheckInComplete={setDailyCheckInComplete}
                 todaysTasks={latentPlan}
-                handleDailyCheckinMenuPress={() => handleMenuClick("checkin")}
+                handleDailyCheckinMenuPress={() =>
+                  router.push("/(tabs)/CheckIn")
+                }
               />
             )}
-            {/* {aiSummary && dailyCheckInComplete && (
-              <InsightsTile
-                title="WHY YOUR PLAN CHANGED"
-                aiSummary={aiSummary}
-              />
-            )} */}
             <HabitsStreaksLayout
               refreshKey={calendarRefreshKey}
               statusOverrides={calendarStatusOverrides}
@@ -280,6 +342,94 @@ export default function Dashboard() {
                 handleDailyCheckinMenuPress={() => handleMenuClick("checkin")}
               />
             )}
+            <Modal
+              visible={showCheckinModal}
+              onClose={() => setShowCheckinModal(false)}
+              title="Daily Check-in Available"
+            >
+              <ThemedText>
+                A short 30-second daily check-in is available to help you
+                reflect and plan your day.
+              </ThemedText>
+
+              <View style={{ height: 16 }} />
+              <Button
+                label="Start Check-in"
+                type="primary"
+                onPress={() => {
+                  setShowCheckinModal(false);
+                  router.push({
+                    pathname: "/(tabs)/CheckIn",
+                    params: {
+                      todaysTasks: JSON.stringify(todaysTasks),
+                      isDailyCheckInComplete: "false",
+                    },
+                  });
+                }}
+              />
+            </Modal>
+
+            <Modal
+              visible={showWelcomeModal}
+              onClose={() => setShowWelcomeModal(false)}
+              title="Welcome to Aspyr"
+            >
+              <ThemedText style={{ textAlign: "center" }}>
+                Make progress without perfection.
+              </ThemedText>
+
+              <View style={{ height: 12 }} />
+
+              {/* <ThemedText style={{ color: "#A1A1AA", marginBottom: 8 }}>
+                Quick tips:
+              </ThemedText> */}
+              <View style={styles.modalTextContainer}>
+                {/* <Text style={styles.dash}>-</Text> */}
+                <ThemedText
+                  style={{
+                    color: "#A1A1AA",
+                    marginBottom: 4,
+                    textAlign: "center",
+                  }}
+                >
+                  Today's Plan lists your prioritized tasks. Check them off as
+                  you go.
+                </ThemedText>
+              </View>
+
+              <View style={styles.modalTextContainer}>
+                {/* <Text style={styles.dash}>-</Text> */}
+                <ThemedText
+                  style={{
+                    color: "#A1A1AA",
+                    marginBottom: 4,
+                    textAlign: "center",
+                  }}
+                >
+                  Complete the daily check-in to automatically adjust your plan.
+                </ThemedText>
+              </View>
+
+              <View style={styles.modalTextContainer}>
+                {/* <Text style={styles.dash}>-</Text> */}
+                <ThemedText
+                  style={{
+                    color: "#A1A1AA",
+                    marginBottom: 8,
+                    textAlign: "center",
+                  }}
+                >
+                  The consistency calendar tracks consistency and habits over
+                  time.
+                </ThemedText>
+              </View>
+
+              <Button
+                label="Get Started"
+                type="primary"
+                onPress={() => setShowWelcomeModal(false)}
+              />
+            </Modal>
             <SlideUpMenu
               visible={isMenuOpen}
               onClose={() => setIsMenuOpen(false)}
@@ -295,3 +445,18 @@ export default function Dashboard() {
     return <Redirect href="/(auth)/Login" />;
   }
 }
+
+const styles = StyleSheet.create({
+  modalTextContainer: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    padding: 10,
+  },
+  dash: {
+    color: "#A1A1AA",
+    fontWeight: "bold",
+    marginTop: 4,
+    paddingRight: 4,
+  },
+});
