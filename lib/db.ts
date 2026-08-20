@@ -1,14 +1,14 @@
 import { CheckInValue } from "@/app/(tabs)/CheckIn";
 import {
-    Commitments,
-    PlanGeneration,
-    Routines,
-    Tasks,
+  Commitments,
+  PlanGeneration,
+  Routines,
+  Tasks,
 } from "@/types/PlanGeneration";
 import { supabase } from "./supabase";
 import {
-    getCurrentDateTimeWithTimezoneOffset,
-    getCurrentDateWithTimezoneOffset,
+  getCurrentDateTimeWithTimezoneOffset,
+  getCurrentDateWithTimezoneOffset,
 } from "./utils";
 
 export async function getProfile() {

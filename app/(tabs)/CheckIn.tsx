@@ -4,13 +4,15 @@ import Loader from "@/components/ui/Loader";
 import TextField from "@/components/ui/TextField";
 import { generateAdaptiveDailyPlan } from "@/lib/ai";
 import { getCurrentUser } from "@/lib/auth";
+import { trackEvent } from "@/lib/analytics";
 import { createDailyCheckIn, saveAdaptiveDailyPlan } from "@/lib/db";
 import { TaskValidationErrors, validateTask } from "@/lib/taskValidation";
+import { getCurrentDateWithTimezoneOffset } from "@/lib/utils";
 import { AVAILABLE_TIME_OPTIONS, AvailableTime } from "@/types/onboarding";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -67,6 +69,7 @@ type PlannedTask = {
 
 export default function CheckIn() {
   const [currentStep, setCurrentStep] = useState<StepType>(1);
+  const checkInTrackedRef = useRef(false);
   const params = useLocalSearchParams();
   const [checkInValue, setCheckInValue] = useState<CheckInValue>({
     yesterdayDifficulty: null,
@@ -213,6 +216,10 @@ export default function CheckIn() {
   }
 
   async function saveReviewedPlan() {
+    if (checkInTrackedRef.current) {
+      return;
+    }
+
     if (!generatedPlan.summary && generatedPlan.tasks.length === 0) {
       return;
     }
@@ -232,6 +239,7 @@ export default function CheckIn() {
     setReviewError("");
 
     await createDailyCheckIn(checkInValue);
+    checkInTrackedRef.current = true;
 
     const user = await getCurrentUser();
     await saveAdaptiveDailyPlan(
@@ -249,6 +257,10 @@ export default function CheckIn() {
       },
       user.id,
     );
+
+    void trackEvent("daily_check_in_completed", {
+      date: getCurrentDateWithTimezoneOffset(),
+    });
 
     setCurrentStep(1);
     router.replace({

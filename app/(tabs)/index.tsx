@@ -24,6 +24,7 @@ import {
   cancelCompletionReminder,
   scheduleDailyNotifications,
 } from "@/lib/scheduleNotifications";
+import { trackEvent } from "@/lib/analytics";
 import { getCurrentDateWithTimezoneOffset } from "@/lib/utils";
 import { Tasks } from "@/types/PlanGeneration";
 import * as Notifications from "expo-notifications";
@@ -33,7 +34,7 @@ import {
   useLocalSearchParams,
   useRouter,
 } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Settings from "./Settings";
@@ -67,6 +68,7 @@ export default function Dashboard() {
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isFirstDayFlag, setIsFirstDayFlag] = useState(false);
+  const dailyPlanCompletionTrackedForDay = useRef<string | null>(null);
   const router = useRouter();
 
   const showIntro = shouldShowIntro === undefined ? "true" : shouldShowIntro;
@@ -232,9 +234,23 @@ export default function Dashboard() {
   );
 
   useEffect(() => {
-    setCompletedTasks(todaysTasks.filter((task) => task.completed).length);
-    if (todaysTasks.length === completedTasks && todaysTasks.length > 0) {
+    const nextCompletedTasks = todaysTasks.filter((task) => task.completed).length;
+    setCompletedTasks(nextCompletedTasks);
+
+    if (todaysTasks.length === nextCompletedTasks && todaysTasks.length > 0) {
       cancelCompletionReminder();
+    }
+
+    const todayKey = getCurrentDateWithTimezoneOffset();
+    const isFullyComplete =
+      todaysTasks.length > 0 && nextCompletedTasks === todaysTasks.length;
+
+    if (isFullyComplete && dailyPlanCompletionTrackedForDay.current !== todayKey) {
+      dailyPlanCompletionTrackedForDay.current = todayKey;
+      void trackEvent("daily_plan_completed", {
+        date: todayKey,
+        total_tasks: todaysTasks.length,
+      });
     }
   }, [todaysTasks]);
 
