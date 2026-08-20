@@ -1,11 +1,11 @@
 import Purchases, {
-    type CustomerInfo,
-    LOG_LEVEL,
-    type PurchasesOffering,
-    type PurchasesPackage,
+  type CustomerInfo,
+  LOG_LEVEL,
+  type PurchasesOffering,
+  type PurchasesPackage,
 } from "react-native-purchases";
 
-export const REVENUECAT_API_KEY = "test_bHQfLTEddrHIEqTetntrEfkdpSN";
+export const REVENUECAT_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS!;
 export const ENTITLEMENT_ID = "Aspyr Pro";
 export const OFFERING_IDENTIFIER = "default";
 

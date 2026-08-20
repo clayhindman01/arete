@@ -2,7 +2,7 @@
   "expo": {
     "name": "Aspyr",
     "slug": "arete",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon_dark.png",
     "scheme": "aspyr",

@@ -125,37 +125,32 @@ export function useSession() {
   const [loading, setLoading] = useState(true);
 
   async function loadProfile(userId: string) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", user)
+      .eq("id", userId)
       .single();
 
-    if (!error) {
-      setProfile(data);
+    if (error) {
+      console.error("Failed to load profile:", error);
+      setProfile(null);
+      return;
     }
+
+    setProfile(data);
   }
 
   useEffect(() => {
-    // Get current session
-    supabase.auth.getSession().then(async ({ data }) => {
-      const currentSession = data.session;
-      setSession(currentSession);
+    let mounted = true;
 
-      if (currentSession?.user) {
-        await loadProfile(currentSession.user.id);
-      }
+    const initialize = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-      setLoading(false);
-    });
+        if (!mounted) return;
 
-    // Listen for auth changes
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
         setSession(session);
 
         if (session?.user) {
@@ -163,11 +158,38 @@ export function useSession() {
         } else {
           setProfile(null);
         }
-      },
-    );
+      } catch (error) {
+        console.error("Failed to initialize auth:", error);
+        if (mounted) {
+          setSession(null);
+          setProfile(null);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initialize();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
+
+      setSession(session);
+
+      if (session?.user) {
+        await loadProfile(session.user.id);
+      } else {
+        setProfile(null);
+      }
+    });
 
     return () => {
-      listener.subscription.unsubscribe();
+      mounted = false;
+      subscription.unsubscribe();
     };
   }, []);
 
