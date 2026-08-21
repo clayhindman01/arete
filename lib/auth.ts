@@ -119,17 +119,37 @@ type Profile = {
   onboarding_complete: boolean;
 };
 
+const AUTH_REQUEST_TIMEOUT_MS = 15_000;
+const SIMULATE_AUTH_FAILURE =
+  __DEV__ && process.env.EXPO_PUBLIC_SIMULATE_AUTH_FAILURE === "true";
+
+function withAuthTimeout<T>(request: PromiseLike<T>): Promise<T> {
+  if (SIMULATE_AUTH_FAILURE) {
+    request = new Promise<T>(() => undefined);
+  }
+
+  let timeoutId: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<T>((_, reject) => {
+    timeoutId = setTimeout(
+      () => reject(new Error("Authentication request timed out")),
+      AUTH_REQUEST_TIMEOUT_MS,
+    );
+  });
+
+  return Promise.race([request, timeout]).finally(() =>
+    clearTimeout(timeoutId),
+  );
+}
+
 export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function loadProfile(userId: string) {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
+    const { data, error } = await withAuthTimeout(
+      supabase.from("profiles").select("*").eq("id", userId).single(),
+    );
 
     if (error) {
       console.error("Failed to load profile:", error);
@@ -147,7 +167,7 @@ export function useSession() {
       try {
         const {
           data: { session },
-        } = await supabase.auth.getSession();
+        } = await withAuthTimeout(supabase.auth.getSession());
 
         if (!mounted) return;
 
@@ -175,15 +195,18 @@ export function useSession() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
 
       setSession(session);
+      setProfile(null);
 
       if (session?.user) {
-        await loadProfile(session.user.id);
-      } else {
-        setProfile(null);
+        // Do not await Supabase calls inside the auth callback. Supabase holds
+        // an internal lock while notifying listeners.
+        setTimeout(() => {
+          if (mounted) void loadProfile(session.user.id);
+        }, 0);
       }
     });
 

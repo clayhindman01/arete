@@ -4,9 +4,11 @@ import HabitTile from "./tiles/HabitTile";
 export default function HabitsStreaksLayout({
   refreshKey,
   statusOverrides,
+  onDatePress,
 }: {
   refreshKey?: number;
   statusOverrides?: Record<string, string>;
+  onDatePress?: (date: string) => void;
 }) {
   return (
     <View
@@ -17,7 +19,11 @@ export default function HabitsStreaksLayout({
         justifyContent: "space-between",
       }}
     >
-      <HabitTile refreshKey={refreshKey} statusOverrides={statusOverrides} />
+      <HabitTile
+        refreshKey={refreshKey}
+        statusOverrides={statusOverrides}
+        onDatePress={onDatePress}
+      />
       {/* <StreakTile /> */}
     </View>
   );

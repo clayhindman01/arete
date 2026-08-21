@@ -467,6 +467,35 @@ export async function getCalendar(date: Date) {
   return data;
 }
 
+export async function getDailyPlan(date: string) {
+  const user = await getUser();
+  const { data, error } = await supabase
+    .from("daily_plans")
+    .select(
+      `
+        ai_summary,
+        daily_tasks (
+          id,
+          title,
+          description,
+          estimated_minutes,
+          sort_order,
+          completed,
+          completed_at
+        )
+      `,
+    )
+    .eq("user_id", user.id)
+    .eq("plan_date", date)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return data;
+}
+
 export async function getCheckinData() {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);

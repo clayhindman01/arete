@@ -15,9 +15,11 @@ import Card from "../ui/Card";
 export default function HabitTile({
   refreshKey,
   statusOverrides,
+  onDatePress,
 }: {
   refreshKey?: number;
   statusOverrides?: Record<string, string>;
+  onDatePress?: (date: string) => void;
 }) {
   const { colors } = useTheme();
 
@@ -234,6 +236,12 @@ export default function HabitTile({
                 key={`${weekIndex}-${dayIndex}`}
                 day={day?.day ?? null}
                 status={day?.status}
+                date={
+                  day?.day
+                    ? `${year}-${String(month + 1).padStart(2, "0")}-${String(day.day).padStart(2, "0")}`
+                    : undefined
+                }
+                onPress={onDatePress}
               />
             ))}
           </View>
@@ -261,16 +269,22 @@ const DayText = ({ day }: { day: string }) => {
 const HabitBox = ({
   day,
   status = "none",
+  date,
+  onPress,
 }: {
   day?: number | null;
   status?: string;
+  date?: string;
+  onPress?: (date: string) => void;
 }) => {
   const isVisibleDay = day !== null && day !== undefined;
   const isComplete = status === "complete";
   const isPartial = status === "partial";
 
   return (
-    <View
+    <Pressable
+      disabled={!isVisibleDay || !date || !onPress}
+      onPress={() => date && onPress?.(date)}
       style={[
         styles.habitBox,
         isVisibleDay && styles.dayVisible,
@@ -289,7 +303,7 @@ const HabitBox = ({
           {day}
         </Text>
       ) : null}
-    </View>
+    </Pressable>
   );
 };
 

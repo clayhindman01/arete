@@ -7,6 +7,7 @@ import TodaysPlan from "@/components/tiles/TodaysPlan";
 import WelcomeTile from "@/components/tiles/WelcomeTile";
 import Button from "@/components/ui/Button";
 import DailyCheckinRecap from "@/components/ui/DailyCheckinRecap";
+import DatePlanRecap from "@/components/ui/DatePlanRecap";
 import Header from "@/components/ui/Header";
 import Loader from "@/components/ui/Loader";
 import Modal from "@/components/ui/Modal";
@@ -65,6 +66,7 @@ export default function Dashboard() {
   >({});
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [selectedMenu, setSelectedMenu] = useState<MenuOption>();
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isFirstDayFlag, setIsFirstDayFlag] = useState(false);
@@ -98,6 +100,11 @@ export default function Dashboard() {
   const handleMenuClick = (label: MenuOption) => {
     setIsMenuOpen(true);
     handleSelectedMenuPress(label);
+  };
+
+  const handleDatePress = (date: string) => {
+    setSelectedDate(date);
+    handleMenuClick("date");
   };
 
   const testNoifications = async () => {
@@ -260,6 +267,14 @@ export default function Dashboard() {
         return <Settings />;
       case "checkin":
         return <DailyCheckinRecap aiSummary={aiSummary} />;
+      case "date":
+        return selectedDate ? (
+          <DatePlanRecap
+            date={selectedDate}
+            onDateChange={setSelectedDate}
+            latentPlan={latentPlan}
+          />
+        ) : null;
     }
   };
 
@@ -312,6 +327,7 @@ export default function Dashboard() {
             <HabitsStreaksLayout
               refreshKey={calendarRefreshKey}
               statusOverrides={calendarStatusOverrides}
+              onDatePress={handleDatePress}
             />
 
             <TodaysPlan

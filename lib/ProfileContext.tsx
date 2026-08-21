@@ -26,6 +26,28 @@ type ProfileContextValue = {
   refreshProfile: () => Promise<void>;
 };
 
+const AUTH_REQUEST_TIMEOUT_MS = 15_000;
+const SIMULATE_AUTH_FAILURE =
+  __DEV__ && process.env.EXPO_PUBLIC_SIMULATE_AUTH_FAILURE === "true";
+
+function withAuthTimeout<T>(request: PromiseLike<T>): Promise<T> {
+  if (SIMULATE_AUTH_FAILURE) {
+    request = new Promise<T>(() => undefined);
+  }
+
+  let timeoutId: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<T>((_, reject) => {
+    timeoutId = setTimeout(
+      () => reject(new Error("Authentication request timed out")),
+      AUTH_REQUEST_TIMEOUT_MS,
+    );
+  });
+
+  return Promise.race([request, timeout]).finally(() =>
+    clearTimeout(timeoutId),
+  );
+}
+
 const ProfileContext = createContext<ProfileContextValue | undefined>(
   undefined,
 );
@@ -38,7 +60,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = useCallback(async () => {
     try {
-      const loadedProfile = await getProfile();
+      const loadedProfile = await withAuthTimeout(getProfile());
       setProfile(loadedProfile as UserProfile);
     } catch (error) {
       console.error("Unable to load profile:", error);
@@ -48,39 +70,58 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    let mounted = true;
+
     const initialize = async () => {
       setLoading(true);
 
-      const { data } = await supabase.auth.getSession();
-      const currentSession = data.session ?? null;
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+      try {
+        const { data } = await withAuthTimeout(supabase.auth.getSession());
+        if (!mounted) return;
 
-      if (currentSession?.user) {
-        await refreshProfile();
-      } else {
+        const currentSession = data.session ?? null;
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (currentSession?.user) {
+          await refreshProfile();
+        } else {
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error("Unable to initialize session:", error);
+        if (!mounted) return;
+
+        setSession(null);
+        setUser(null);
         setProfile(null);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     initialize();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
+        if (!mounted) return;
+
         setSession(session);
         setUser(session?.user ?? null);
+        setProfile(null);
 
         if (session?.user) {
-          await refreshProfile();
-        } else {
-          setProfile(null);
+          setTimeout(() => {
+            if (mounted) {
+              void refreshProfile().catch(() => undefined);
+            }
+          }, 0);
         }
       },
     );
 
     return () => {
+      mounted = false;
       listener.subscription.unsubscribe();
     };
   }, [refreshProfile]);
