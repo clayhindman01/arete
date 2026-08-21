@@ -89,6 +89,7 @@ async function callModelWithRetry(fn: () => Promise<any>, maxRetries = 5) {
 
 type AdaptivePlanInput = {
   tasks: any[];
+  recentPlans: any[];
   checkIn: {
     yesterdayDifficulty?: string | null;
     yesterdayDifficultyNote?: string | null;
@@ -102,6 +103,7 @@ type AdaptivePlanInput = {
 
 export async function generateAdaptiveDailyPlan({
   tasks,
+  recentPlans,
   checkIn,
 }: AdaptivePlanInput) {
   return callModelWithRetry(
@@ -111,6 +113,7 @@ export async function generateAdaptiveDailyPlan({
           body: {
             prompt: JSON.stringify({
               current_tasks: tasks,
+              recent_plans: recentPlans,
               check_in: {
                 ...checkIn,
                 yesterday_plan_feedback:

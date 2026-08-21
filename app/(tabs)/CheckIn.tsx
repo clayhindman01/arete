@@ -3,9 +3,13 @@ import ButtonGroup from "@/components/ui/ButtonGroup";
 import Loader from "@/components/ui/Loader";
 import TextField from "@/components/ui/TextField";
 import { generateAdaptiveDailyPlan } from "@/lib/ai";
-import { getCurrentUser } from "@/lib/auth";
 import { trackEvent } from "@/lib/analytics";
-import { createDailyCheckIn, saveAdaptiveDailyPlan } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
+import {
+  createDailyCheckIn,
+  getRecentDailyPlans,
+  saveAdaptiveDailyPlan,
+} from "@/lib/db";
 import { TaskValidationErrors, validateTask } from "@/lib/taskValidation";
 import { getCurrentDateWithTimezoneOffset } from "@/lib/utils";
 import { AVAILABLE_TIME_OPTIONS, AvailableTime } from "@/types/onboarding";
@@ -185,9 +189,11 @@ export default function CheckIn() {
     setIsLoading(true);
 
     const user = await getCurrentUser();
+    const recentPlans = await getRecentDailyPlans(user.id);
 
     generateAdaptiveDailyPlan({
       tasks: JSON.parse(params.todaysTasks as string),
+      recentPlans,
       checkIn,
     })
       .then(async (res) => {
@@ -502,82 +508,60 @@ export default function CheckIn() {
                         </View>
                       </View>
 
-                      {
-                        isEditing && (
-                          <View style={styles.taskEditor}>
-                            <Text style={styles.fieldLabel}>Title</Text>
-                            <TextField
-                              placeholder="Task title"
-                              value={task.title}
-                              error={taskErrors[index]?.title}
-                              onChangeText={(text) => {
-                                const nextTask = { ...task, title: text };
-                                updateTaskError(index, nextTask);
-                                updateGeneratedTask(index, { title: text });
-                              }}
-                            />
+                      {isEditing && (
+                        <View style={styles.taskEditor}>
+                          <Text style={styles.fieldLabel}>Title</Text>
+                          <TextField
+                            placeholder="Task title"
+                            value={task.title}
+                            error={taskErrors[index]?.title}
+                            onChangeText={(text) => {
+                              const nextTask = { ...task, title: text };
+                              updateTaskError(index, nextTask);
+                              updateGeneratedTask(index, { title: text });
+                            }}
+                          />
 
-                            <Text style={styles.fieldLabel}>Description</Text>
-                            <TextField
-                              placeholder="Task description"
-                              value={task.description}
-                              error={taskErrors[index]?.description}
-                              onChangeText={(text) => {
-                                const nextTask = { ...task, description: text };
-                                updateTaskError(index, nextTask);
-                                updateGeneratedTask(index, {
-                                  description: text,
-                                });
-                              }}
-                            />
+                          <Text style={styles.fieldLabel}>Description</Text>
+                          <TextField
+                            placeholder="Task description"
+                            value={task.description}
+                            error={taskErrors[index]?.description}
+                            onChangeText={(text) => {
+                              const nextTask = { ...task, description: text };
+                              updateTaskError(index, nextTask);
+                              updateGeneratedTask(index, {
+                                description: text,
+                              });
+                            }}
+                          />
 
-                            <Text style={styles.fieldLabel}>
-                              Estimated time (minutes)
-                            </Text>
-                            <TextField
-                              placeholder="Minutes"
-                              value={String(task.estimated_minutes ?? 30)}
-                              error={taskErrors[index]?.estimated_minutes}
-                              keyboardType="numeric"
-                              onChangeText={(text) => {
-                                const nextTask = {
-                                  ...task,
-                                  estimated_minutes: Number(text) || 0,
-                                };
-                                updateTaskError(index, nextTask);
-                                updateGeneratedTask(index, {
-                                  estimated_minutes: Number(text) || 0,
-                                });
-                              }}
-                            />
-                          </View>
-                        )
-                        // : (
-                        //   <View style={styles.taskSummaryRow}>
-                        //     <View style={styles.taskSummaryContent}>
-                        //       <Text style={styles.taskSummaryTitle}>
-                        //         {task.title || "Untitled task"}
-                        //       </Text>
-                        //       <Text style={styles.taskSummaryDescription}>
-                        //         {task.description || "No description added."}
-                        //       </Text>
-                        //       <Text style={styles.taskSummaryFrequency}>
-                        //         {task.description ? "" : ""}
-                        //       </Text>
-                        //     </View>
-                        //     <Text style={styles.taskSummaryMeta}>
-                        //       {task.estimated_minutes || 30} min
-                        //     </Text>
-                        //   </View>
-                        // )
-                      }
+                          <Text style={styles.fieldLabel}>
+                            Estimated time (minutes)
+                          </Text>
+                          <TextField
+                            placeholder="Minutes"
+                            value={String(task.estimated_minutes ?? 30)}
+                            error={taskErrors[index]?.estimated_minutes}
+                            keyboardType="numeric"
+                            onChangeText={(text) => {
+                              const nextTask = {
+                                ...task,
+                                estimated_minutes: Number(text) || 0,
+                              };
+                              updateTaskError(index, nextTask);
+                              updateGeneratedTask(index, {
+                                estimated_minutes: Number(text) || 0,
+                              });
+                            }}
+                          />
+                        </View>
+                      )}
                     </View>
                   );
                 })}
 
-                {reviewError ? (
-                  <Text style={styles.errorText}>{reviewError}</Text>
-                ) : null}
+                {reviewError ? <Text>{reviewError}</Text> : null}
 
                 <View style={styles.actions}>
                   <Button

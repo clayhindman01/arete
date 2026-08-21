@@ -26,6 +26,12 @@ describe("adaptive daily plan generation", () => {
   it("includes the free-text yesterday plan feedback in the adaptive plan payload", async () => {
     await generateAdaptiveDailyPlan({
       tasks: [],
+      recentPlans: [
+        {
+          plan_date: "2026-08-20",
+          daily_tasks: [{ title: "Walk", completed: false }],
+        },
+      ],
       checkIn: {
         yesterdayDifficulty: "easy",
         yesterdayDifficultyNote:
@@ -44,5 +50,10 @@ describe("adaptive daily plan generation", () => {
         }),
       }),
     );
+
+    const request = mockedInvoke.mock.calls[0][1];
+    expect(JSON.parse(request.body.prompt).recent_plans).toEqual([
+      expect.objectContaining({ plan_date: "2026-08-20" }),
+    ]);
   });
 });

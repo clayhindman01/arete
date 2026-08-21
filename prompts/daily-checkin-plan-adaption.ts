@@ -38,7 +38,24 @@ Rules:
    - Poor sleep → prioritize important tasks and simplify others.
    - Strong adherence → maintain or slightly increase challenge.
 
-4. Output:
+4. Retention across recent plans:
+   - Use recent_plans to compare the same task across the last 7 days. Match
+     tasks by id when available, otherwise by a stable/similar title.
+   - Treat retention as the completion rate for a task across the days it was
+     assigned. Repeatedly incomplete tasks are retention problems, even when
+     the overall plan completion rate is good.
+   - When yesterday's plan felt about right and a specific task has been
+     repeatedly missed, keep that task but make it easier to retain: shorten
+     its estimated_minutes and reduce its scope, complexity, or starting step.
+     Make the smallest useful change and do not change unrelated tasks.
+   - When a recent plan was difficult or very difficult but every task was
+     completed, make today's equivalent not-yet-completed tasks only slightly
+     easier. Do not make a large reduction and do not increase the challenge.
+     Preserve any tasks already marked completed exactly as they are.
+   - Do not interpret a single missed task as a retention trend. Prefer a
+     repeated pattern across at least 2 assigned days.
+
+5. Output:
 Return ONLY valid JSON.
 
 Output format:

@@ -1,14 +1,14 @@
 import { CheckInValue } from "@/app/(tabs)/CheckIn";
 import {
-  Commitments,
-  PlanGeneration,
-  Routines,
-  Tasks,
+    Commitments,
+    PlanGeneration,
+    Routines,
+    Tasks,
 } from "@/types/PlanGeneration";
 import { supabase } from "./supabase";
 import {
-  getCurrentDateTimeWithTimezoneOffset,
-  getCurrentDateWithTimezoneOffset,
+    getCurrentDateTimeWithTimezoneOffset,
+    getCurrentDateWithTimezoneOffset,
 } from "./utils";
 
 export async function getProfile() {
@@ -562,6 +562,52 @@ export async function getDailyPlan(date: string) {
   if (error) throw error;
 
   return data;
+}
+
+export async function getRecentDailyPlans(userId: string) {
+  const endDate = getCurrentDateWithTimezoneOffset();
+  const startDateValue = new Date(`${endDate}T00:00:00`);
+  startDateValue.setDate(startDateValue.getDate() - 6);
+  const startDate = [
+    startDateValue.getFullYear(),
+    String(startDateValue.getMonth() + 1).padStart(2, "0"),
+    String(startDateValue.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  const { data, error } = await supabase
+    .from("daily_plans")
+    .select(
+      `
+        plan_date,
+        ai_summary,
+        created_at,
+        daily_tasks (
+          id,
+          title,
+          description,
+          estimated_minutes,
+          sort_order,
+          completed,
+          completed_at
+        )
+      `,
+    )
+    .eq("user_id", userId)
+    .gte("plan_date", startDate)
+    .lte("plan_date", endDate)
+    .order("plan_date", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  const latestPlanByDate = new Map<string, (typeof data)[number]>();
+  for (const plan of data ?? []) {
+    if (!latestPlanByDate.has(plan.plan_date)) {
+      latestPlanByDate.set(plan.plan_date, plan);
+    }
+  }
+
+  return Array.from(latestPlanByDate.values());
 }
 
 export async function getCheckinData() {
