@@ -29,32 +29,15 @@ export default function TodaysPlan({
     <Card>
       <View style={styles.headerContainer}>
         <ThemedText type="subtitle">TODAY'S PLAN</ThemedText>
-        {/* <Text style={[styles.titleText, { color: "#A1A1AA" }]}>
-          TODAY'S PLAN
-        </Text> */}
       </View>
       {aiSummary && dailyCheckInComplete && (
-        <View
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 5,
-            paddingLeft: 5,
-            paddingBottom: 5,
-          }}
-        >
-          <Text
-            style={{
-              color: "#A1A1AA",
-              letterSpacing: 1,
-              fontSize: 12,
-              fontWeight: 600,
-              textAlign: "center",
-            }}
-          >
-            {aiSummary}
-          </Text>
+        <View style={styles.aiSummaryBox}>
+          <MaterialCommunityIcons
+            name="lightbulb-on-outline"
+            color="#b89b5e"
+            size={18}
+          />
+          <Text style={styles.aiSummaryText}>{aiSummary}</Text>
         </View>
       )}
       {!dailyCheckInComplete && !isFirstDay() && (
@@ -297,5 +280,24 @@ const styles = StyleSheet.create({
   },
   complete: {
     backgroundColor: "#b89b5e",
+  },
+  aiSummaryBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2A2A2A",
+    borderWidth: 1,
+    borderColor: "#1F1F1F",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    gap: 10,
+  },
+  aiSummaryText: {
+    color: "#FFFFFF",
+    letterSpacing: 0.5,
+    fontSize: 13,
+    fontWeight: "500",
+    flex: 1,
+    lineHeight: 18,
   },
 });

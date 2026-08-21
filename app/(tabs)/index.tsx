@@ -1,5 +1,4 @@
 import HabitsStreaksLayout from "@/components/HabitsStreaksLayout";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ThemedText } from "@/components/themed-text";
 import DailyCheckInTile from "@/components/tiles/DailyCheckInTile";
 import EverythingCompletedTile from "@/components/tiles/EverythingCompletedTile";
@@ -18,24 +17,25 @@ import SlideUpMenu from "@/components/ui/SlideUpMenu";
 import { trackEvent } from "@/lib/analytics";
 import { getCurrentUser } from "@/lib/auth";
 import {
-    createOrUpdateLatentPlan,
-    getActivePlan,
-    getOrCreatePreCheckinDailyPlan,
-    hasCompletedDailyCheckInToday,
+  createOrUpdateLatentPlan,
+  getActivePlan,
+  getOrCreatePreCheckinDailyPlan,
+  hasCompletedDailyCheckInToday,
 } from "@/lib/db";
 import { registerForNotifications } from "@/lib/notifications";
 import {
-    cancelCompletionReminder,
-    scheduleDailyNotifications,
+  cancelCompletionReminder,
+  scheduleDailyNotifications,
 } from "@/lib/scheduleNotifications";
 import { getCurrentDateWithTimezoneOffset } from "@/lib/utils";
 import { Tasks } from "@/types/PlanGeneration";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
 import {
-    Redirect,
-    useFocusEffect,
-    useLocalSearchParams,
-    useRouter,
+  Redirect,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
 } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -94,7 +94,9 @@ export default function Dashboard() {
   const [showWeeklyReportModal, setShowWeeklyReportModal] = useState(false);
   const [weeklyReportComplete, setWeeklyReportComplete] = useState(false);
   const [weeklyReportAvailable, setWeeklyReportAvailable] = useState(false);
-  const [weeklyReportStorageKey, setWeeklyReportStorageKey] = useState<string | null>(null);
+  const [weeklyReportStorageKey, setWeeklyReportStorageKey] = useState<
+    string | null
+  >(null);
   const [isFirstDayFlag, setIsFirstDayFlag] = useState(false);
   const dailyPlanCompletionTrackedForDay = useRef<string | null>(null);
   const router = useRouter();
