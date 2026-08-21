@@ -564,10 +564,11 @@ export async function getDailyPlan(date: string) {
   return data;
 }
 
-export async function getRecentDailyPlans(userId: string) {
+export async function getRecentDailyPlans(userId?: string) {
+  const currentUserId = userId ?? (await getUser()).id;
   const endDate = getCurrentDateWithTimezoneOffset();
   const startDateValue = new Date(`${endDate}T00:00:00`);
-  startDateValue.setDate(startDateValue.getDate() - 6);
+  startDateValue.setDate(startDateValue.getDate() - 13);
   const startDate = [
     startDateValue.getFullYear(),
     String(startDateValue.getMonth() + 1).padStart(2, "0"),
@@ -592,7 +593,7 @@ export async function getRecentDailyPlans(userId: string) {
         )
       `,
     )
-    .eq("user_id", userId)
+    .eq("user_id", currentUserId)
     .gte("plan_date", startDate)
     .lte("plan_date", endDate)
     .order("plan_date", { ascending: false })
@@ -607,7 +608,42 @@ export async function getRecentDailyPlans(userId: string) {
     }
   }
 
-  return Array.from(latestPlanByDate.values());
+  return Array.from(latestPlanByDate.values()).map((plan) => ({
+    ...plan,
+    daily_tasks: (plan.daily_tasks ?? []).map((task) => ({
+      title: task.title,
+      completed: Boolean(task.completed),
+    })),
+  }));
+}
+
+export async function getWeeklyCheckIns(userId?: string) {
+  const currentUserId = userId ?? (await getUser()).id;
+  const endDate = new Date();
+  const startDate = new Date(endDate);
+  startDate.setDate(endDate.getDate() - 13);
+  startDate.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from("check_ins")
+    .select(
+      "created_at, difficulty_rating, difficulty_note, energy_level, available_time, notes",
+    )
+    .eq("user_id", currentUserId)
+    .gte("created_at", startDate.toISOString())
+    .lte("created_at", endDate.toISOString())
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  return (data ?? []).map((entry) => ({
+    created_at: entry.created_at,
+    difficulty_rating: entry.difficulty_rating,
+    difficulty_note: entry.difficulty_note,
+    energy_level: entry.energy_level,
+    available_time: entry.available_time,
+    notes: entry.notes,
+  }));
 }
 
 export async function getCheckinData() {

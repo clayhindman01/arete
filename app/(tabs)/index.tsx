@@ -1,9 +1,11 @@
 import HabitsStreaksLayout from "@/components/HabitsStreaksLayout";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ThemedText } from "@/components/themed-text";
 import DailyCheckInTile from "@/components/tiles/DailyCheckInTile";
 import EverythingCompletedTile from "@/components/tiles/EverythingCompletedTile";
 import GoalCard from "@/components/tiles/GoalCard";
 import TodaysPlan from "@/components/tiles/TodaysPlan";
+import WeeklyReportTile from "@/components/tiles/WeeklyReportTile";
 import WelcomeTile from "@/components/tiles/WelcomeTile";
 import Button from "@/components/ui/Button";
 import DailyCheckinRecap from "@/components/ui/DailyCheckinRecap";
@@ -13,27 +15,27 @@ import Loader from "@/components/ui/Loader";
 import Modal from "@/components/ui/Modal";
 import PulseText from "@/components/ui/PulseText";
 import SlideUpMenu from "@/components/ui/SlideUpMenu";
+import { trackEvent } from "@/lib/analytics";
 import { getCurrentUser } from "@/lib/auth";
 import {
-  createOrUpdateLatentPlan,
-  getActivePlan,
-  getOrCreatePreCheckinDailyPlan,
-  hasCompletedDailyCheckInToday,
+    createOrUpdateLatentPlan,
+    getActivePlan,
+    getOrCreatePreCheckinDailyPlan,
+    hasCompletedDailyCheckInToday,
 } from "@/lib/db";
 import { registerForNotifications } from "@/lib/notifications";
 import {
-  cancelCompletionReminder,
-  scheduleDailyNotifications,
+    cancelCompletionReminder,
+    scheduleDailyNotifications,
 } from "@/lib/scheduleNotifications";
-import { trackEvent } from "@/lib/analytics";
 import { getCurrentDateWithTimezoneOffset } from "@/lib/utils";
 import { Tasks } from "@/types/PlanGeneration";
 import * as Notifications from "expo-notifications";
 import {
-  Redirect,
-  useFocusEffect,
-  useLocalSearchParams,
-  useRouter,
+    Redirect,
+    useFocusEffect,
+    useLocalSearchParams,
+    useRouter,
 } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -43,8 +45,28 @@ import Settings from "./Settings";
 // Session-scoped flags to ensure modals only appear once per app session
 let hasShownCheckinModalThisSession = false;
 let hasShownWelcomeModalThisSession = false;
+let hasShownWeeklyReportModalThisSession = false;
 
 type MenuOption = "settings" | "checkin" | "date";
+
+function getPreviousSundaySaturdayWindow(referenceDate = new Date()) {
+  const today = new Date(referenceDate);
+  today.setHours(0, 0, 0, 0);
+
+  const currentSunday = new Date(today);
+  currentSunday.setDate(today.getDate() - today.getDay());
+
+  const weekStart = new Date(currentSunday);
+  weekStart.setDate(currentSunday.getDate() - 7);
+
+  const weekEnd = new Date(currentSunday);
+  weekEnd.setDate(currentSunday.getDate() - 1);
+
+  return {
+    weekStart: weekStart.toISOString().slice(0, 10),
+    weekEnd: weekEnd.toISOString().slice(0, 10),
+  };
+}
 
 export default function Dashboard() {
   const [todaysTasks, setTodaysTasks] = useState<Tasks[]>([]);
@@ -69,11 +91,98 @@ export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showWeeklyReportModal, setShowWeeklyReportModal] = useState(false);
+  const [weeklyReportComplete, setWeeklyReportComplete] = useState(false);
+  const [weeklyReportAvailable, setWeeklyReportAvailable] = useState(false);
+  const [weeklyReportStorageKey, setWeeklyReportStorageKey] = useState<string | null>(null);
   const [isFirstDayFlag, setIsFirstDayFlag] = useState(false);
   const dailyPlanCompletionTrackedForDay = useRef<string | null>(null);
   const router = useRouter();
 
   const showIntro = shouldShowIntro === undefined ? "true" : shouldShowIntro;
+
+  const buildWeeklyRecapViewedKey = (
+    userId: string,
+    weekStart: string,
+    weekEnd: string,
+  ) => `weekly_recap_viewed:${userId}:${weekStart}:${weekEnd}`;
+
+  const markWeeklyRecapViewed = useCallback(async () => {
+    try {
+      let storageKey = weeklyReportStorageKey;
+
+      if (!storageKey) {
+        const user = await getCurrentUser();
+        if (!user?.id) {
+          return;
+        }
+        const weekWindow = getPreviousSundaySaturdayWindow();
+        storageKey = buildWeeklyRecapViewedKey(
+          user.id,
+          weekWindow.weekStart,
+          weekWindow.weekEnd,
+        );
+        setWeeklyReportStorageKey(storageKey);
+      }
+
+      await AsyncStorage.setItem(storageKey, "true");
+      setWeeklyReportComplete(true);
+      hasShownWeeklyReportModalThisSession = true;
+    } catch (error) {
+      console.warn("Could not persist weekly recap viewed state", error);
+      setWeeklyReportComplete(true);
+      hasShownWeeklyReportModalThisSession = true;
+    }
+  }, [weeklyReportStorageKey]);
+
+  const openWeeklyRecap = useCallback(async () => {
+    await markWeeklyRecapViewed();
+    setShowWeeklyReportModal(false);
+    router.navigate("/modal");
+  }, [markWeeklyRecapViewed, router]);
+
+  const getWeeklyReportAvailability = useCallback(async () => {
+    try {
+      const user = await getCurrentUser();
+      if (!user?.created_at) {
+        setWeeklyReportAvailable(false);
+        setWeeklyReportStorageKey(null);
+        setWeeklyReportComplete(false);
+        return;
+      }
+
+      const createdAt = new Date(user.created_at).getTime();
+      const diffDays = (Date.now() - createdAt) / (1000 * 60 * 60 * 24);
+      const available = diffDays >= 7;
+      setWeeklyReportAvailable(available);
+
+      const weekWindow = getPreviousSundaySaturdayWindow();
+      const storageKey = buildWeeklyRecapViewedKey(
+        user.id,
+        weekWindow.weekStart,
+        weekWindow.weekEnd,
+      );
+      setWeeklyReportStorageKey(storageKey);
+
+      const hasViewedThisWeek =
+        (await AsyncStorage.getItem(storageKey)) === "true";
+      setWeeklyReportComplete(hasViewedThisWeek);
+
+      if (
+        available &&
+        !hasViewedThisWeek &&
+        !hasShownWeeklyReportModalThisSession
+      ) {
+        setShowWeeklyReportModal(true);
+        hasShownWeeklyReportModalThisSession = true;
+      }
+    } catch (error) {
+      console.warn("Could not determine weekly report availability", error);
+      setWeeklyReportAvailable(false);
+      setWeeklyReportStorageKey(null);
+      setWeeklyReportComplete(false);
+    }
+  }, []);
 
   const deriveCalendarStatus = (tasks: Tasks[] | null | undefined) => {
     if (!tasks || tasks.length === 0) {
@@ -190,6 +299,8 @@ export default function Dashboard() {
 
           await fetchActivePlan();
           if (!active) return;
+          await getWeeklyReportAvailability();
+          if (!active) return;
           setIsLoading(false);
 
           if (!completed) {
@@ -241,7 +352,9 @@ export default function Dashboard() {
   );
 
   useEffect(() => {
-    const nextCompletedTasks = todaysTasks.filter((task) => task.completed).length;
+    const nextCompletedTasks = todaysTasks.filter(
+      (task) => task.completed,
+    ).length;
     setCompletedTasks(nextCompletedTasks);
 
     if (todaysTasks.length === nextCompletedTasks && todaysTasks.length > 0) {
@@ -252,7 +365,10 @@ export default function Dashboard() {
     const isFullyComplete =
       todaysTasks.length > 0 && nextCompletedTasks === todaysTasks.length;
 
-    if (isFullyComplete && dailyPlanCompletionTrackedForDay.current !== todayKey) {
+    if (
+      isFullyComplete &&
+      dailyPlanCompletionTrackedForDay.current !== todayKey
+    ) {
       dailyPlanCompletionTrackedForDay.current = todayKey;
       void trackEvent("daily_plan_completed", {
         date: todayKey,
@@ -365,6 +481,14 @@ export default function Dashboard() {
                 handleDailyCheckinMenuPress={() => handleMenuClick("checkin")}
               />
             )}
+
+            {weeklyReportAvailable && (
+              <WeeklyReportTile
+                weeklyReportComplete={weeklyReportComplete}
+                setWeeklyReportComplete={setWeeklyReportComplete}
+                onOpenRecap={openWeeklyRecap}
+              />
+            )}
             <Modal
               visible={showCheckinModal}
               onClose={() => setShowCheckinModal(false)}
@@ -389,6 +513,27 @@ export default function Dashboard() {
                       isDailyCheckInComplete: "false",
                     },
                   });
+                }}
+              />
+            </Modal>
+
+            <Modal
+              visible={showWeeklyReportModal}
+              onClose={() => setShowWeeklyReportModal(false)}
+              title="Weekly recap is ready"
+              showCloseIcon={true}
+            >
+              <ThemedText>
+                Your weekly recap is ready. It looks back at the previous Sunday
+                through Saturday and highlights how your week went.
+              </ThemedText>
+
+              <View style={{ height: 16 }} />
+              <Button
+                label="View weekly recap"
+                type="primary"
+                onPress={() => {
+                  void openWeeklyRecap();
                 }}
               />
             </Modal>
