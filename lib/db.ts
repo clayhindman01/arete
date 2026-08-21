@@ -183,7 +183,75 @@ export async function saveGeneratedPlan(userId: string, plan: PlanGeneration) {
     }
   }
 
+  await syncCurrentDailyPlan(userId, plan);
+
   return planRow;
+}
+
+async function syncCurrentDailyPlan(userId: string, plan: PlanGeneration) {
+  const today = getToday();
+  const planDate = getCurrentDateWithTimezoneOffset();
+  const { data: currentPlan, error: currentPlanError } = await supabase
+    .from("daily_plans")
+    .select(
+      `
+        id,
+        daily_tasks (
+          title,
+          completed
+        )
+      `,
+    )
+    .eq("user_id", userId)
+    .eq("plan_date", planDate)
+    .eq("is_current", true)
+    .maybeSingle();
+
+  if (currentPlanError) throw currentPlanError;
+  if (!currentPlan) return;
+
+  const completedByTitle = new Map<string, boolean[]>();
+  for (const task of currentPlan.daily_tasks ?? []) {
+    const completedTasks = completedByTitle.get(task.title) ?? [];
+    completedTasks.push(Boolean(task.completed));
+    completedByTitle.set(task.title, completedTasks);
+  }
+
+  const tasksForToday = plan.commitments
+    .flatMap((commitment) =>
+      commitment.routines
+        .filter((routine) => routine.days_of_week.includes(today))
+        .flatMap((routine) => routine.tasks),
+    )
+    .slice(0, 6);
+
+  const { error: deleteError } = await supabase
+    .from("daily_tasks")
+    .delete()
+    .eq("plan_id", currentPlan.id);
+
+  if (deleteError) throw deleteError;
+
+  if (tasksForToday.length === 0) return;
+
+  const { error: insertError } = await supabase.from("daily_tasks").insert(
+    tasksForToday.map((task, index) => {
+      const previousCompletion = completedByTitle.get(task.title) ?? [];
+      const completed = previousCompletion.shift() ?? false;
+
+      return {
+        plan_id: currentPlan.id,
+        title: task.title,
+        description: task.description,
+        estimated_minutes: task.estimated_minutes,
+        sort_order: index,
+        completed,
+        completed_at: completed ? planDate : null,
+      };
+    }),
+  );
+
+  if (insertError) throw insertError;
 }
 
 const DAY_MAP = ["Su", "M", "T", "W", "Th", "F", "S"] as const;
