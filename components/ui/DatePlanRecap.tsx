@@ -73,11 +73,14 @@ export default function DatePlanRecap({
     };
   }, [date, isFuture, latentPlan]);
 
-  const formattedDate = new Date(`${date}T12:00:00`).toLocaleDateString(undefined, {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+  const formattedDate = new Date(`${date}T12:00:00`).toLocaleDateString(
+    undefined,
+    {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    },
+  );
 
   if (isLoading) return <ActivityIndicator style={styles.loader} />;
 
@@ -89,7 +92,11 @@ export default function DatePlanRecap({
           onPress={() => onDateChange(getAdjacentDate(date, -1))}
           style={styles.navigationButton}
         >
-          <MaterialCommunityIcons name="chevron-left" size={32} color="#ecedee" />
+          <MaterialCommunityIcons
+            name="chevron-left"
+            size={32}
+            color="#ecedee"
+          />
         </Pressable>
         <Text style={styles.title}>{formattedDate}</Text>
         <Pressable
@@ -97,10 +104,16 @@ export default function DatePlanRecap({
           onPress={() => onDateChange(getAdjacentDate(date, 1))}
           style={styles.navigationButton}
         >
-          <MaterialCommunityIcons name="chevron-right" size={32} color="#ecedee" />
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={32}
+            color="#ecedee"
+          />
         </Pressable>
       </View>
-      <Text style={styles.subtitle}>{isFuture ? "UPCOMING PLAN" : "DAILY PLAN"}</Text>
+      <Text style={styles.subtitle}>
+        {isFuture ? "UPCOMING PLAN" : "DAILY PLAN"}
+      </Text>
       {isFuture ? (
         <Text style={styles.disclaimer}>
           This plan is projected and may change based on your progress.
@@ -126,10 +139,14 @@ function TaskList({ tasks }: { tasks: Tasks[] }) {
     <View style={styles.section}>
       {tasks.map((task) => (
         <View key={task.id ?? task.title} style={styles.taskRow}>
-          <View style={[styles.status, task.completed && styles.statusComplete]}>
+          <View
+            style={[styles.status, task.completed && styles.statusComplete]}
+          >
             {task.completed ? <Text style={styles.check}>✓</Text> : null}
           </View>
-          <Text style={[styles.taskText, task.completed && styles.completedText]}>
+          <Text
+            style={[styles.taskText, task.completed && styles.completedText]}
+          >
             {task.title}
           </Text>
         </View>
@@ -141,17 +158,58 @@ function TaskList({ tasks }: { tasks: Tasks[] }) {
 const styles = StyleSheet.create({
   content: { paddingBottom: 24 },
   loader: { marginTop: 48 },
-  dateNavigation: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
-  navigationButton: { alignItems: "center", justifyContent: "center", minHeight: 44, minWidth: 44 },
-  title: { color: "#ecedee", flex: 1, fontSize: 24, fontWeight: "700", textAlign: "center", marginBottom: 6 },
-  subtitle: { color: "#A1A1AA", fontSize: 12, letterSpacing: 1.5, textAlign: "center" },
-  disclaimer: { color: "#A1A1AA", fontSize: 12, lineHeight: 18, marginTop: 12, textAlign: "center" },
+  dateNavigation: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  navigationButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 44,
+    minWidth: 44,
+  },
+  title: {
+    color: "#ecedee",
+    flex: 1,
+    fontSize: 24,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  subtitle: {
+    color: "#A1A1AA",
+    fontSize: 12,
+    letterSpacing: 1.5,
+    textAlign: "center",
+  },
+  disclaimer: {
+    color: "#A1A1AA",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 12,
+    textAlign: "center",
+  },
   section: { marginTop: 28 },
   taskRow: { alignItems: "center", flexDirection: "row", paddingVertical: 10 },
-  status: { alignItems: "center", borderColor: "#52525b", borderRadius: 10, borderWidth: 1, height: 20, justifyContent: "center", marginRight: 12, width: 20 },
-  statusComplete: { backgroundColor: "#22c55e", borderColor: "#22c55e" },
+  status: {
+    alignItems: "center",
+    borderColor: "#52525b",
+    borderRadius: 10,
+    borderWidth: 1,
+    height: 20,
+    justifyContent: "center",
+    marginRight: 12,
+    width: 20,
+  },
+  statusComplete: { backgroundColor: "#b89b5e", borderColor: "#b89b5e" },
   check: { color: "#111318", fontSize: 13, fontWeight: "700" },
   taskText: { color: "#ecedee", flex: 1, fontSize: 15, letterSpacing: 0.4 },
   completedText: { color: "#A1A1AA", textDecorationLine: "line-through" },
-  emptyText: { color: "#A1A1AA", fontSize: 15, paddingVertical: 36, textAlign: "center" },
+  emptyText: {
+    color: "#A1A1AA",
+    fontSize: 15,
+    paddingVertical: 36,
+    textAlign: "center",
+  },
 });

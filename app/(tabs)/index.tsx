@@ -321,7 +321,7 @@ export default function Dashboard() {
               goal={goal}
               completed={completedTasks}
               total={todaysTasks.length}
-              onEdit={() => handleMenuClick("settings")}
+              onEdit={() => router.push("/plan")}
             />
 
             <HabitsStreaksLayout
